@@ -1868,7 +1868,7 @@ export default Vue.extend({
 .swap.container {
   max-width: 1350px;
   width: 100%;
-  margin-top: 20px;
+  margin-top: 50px;
   margin-bottom: 20px;
   padding: 15px;
   margin-left: auto;
@@ -2139,12 +2139,17 @@ export default Vue.extend({
 
   div {
     background: @gradient-color-icon;
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     display: flex;
     justify-content: center;
     align-items: center;
     border-radius: 50%;
+    transition: 0.3s;
+
+    &:hover {
+      transform: scale(1.1);
+    }
   }
 }
 

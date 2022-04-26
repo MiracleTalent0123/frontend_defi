@@ -142,7 +142,7 @@ export default Vue.extend({
   }
 
   .coin-input {
-    background: rgba(226, 227, 236, 0.3);
+    background: rgba(226, 227, 236, 0.2);
     border-radius: 18px;
     padding: 12px;
     position: relative;
@@ -194,7 +194,7 @@ export default Vue.extend({
       width: 32px;
       border: 1px solid #6574d6;
       border-radius: 4px;
-      color: #ccd1f1;
+      color: @color-blue50;
     }
 
     .select-button {
@@ -261,8 +261,7 @@ export default Vue.extend({
       }
 
       &::placeholder {
-        color: white;
-        opacity: 0.5;
+        color: @color-blue200;
       }
     }
 
@@ -272,7 +271,7 @@ export default Vue.extend({
 
     .label {
       margin-top: 8px;
-      color: @color-blue200;
+      color: @color-blue100;
     }
   }
 }
