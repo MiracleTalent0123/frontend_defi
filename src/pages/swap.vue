@@ -1,252 +1,276 @@
 <template>
-  <div class="swap container">
-    <div v-if="wsolBalance && wsolBalance.balance.fixed() > 0" class="note-unwrapped-sol">
-      <div class="note-content">
-        <img class="note-icon" src="@/assets/icons/status-warning.svg" />
-        <label class="font-small weight-semi">
-          You have {{ wsolBalance.balance.fixed() }} <span style="color: #23adb4">wrapped SOL</span> in your wallet.
-          Click to unwrap to native SOL.
-        </label>
+  <div>
+    <div class="swap container">
+      <div v-if="wsolBalance && wsolBalance.balance.fixed() > 0" class="note-unwrapped-sol">
+        <div class="note-content">
+          <img class="note-icon" src="@/assets/icons/status-warning.svg" />
+          <label class="font-small weight-semi">
+            You have {{ wsolBalance.balance.fixed() }} <span style="color: #23adb4">wrapped SOL</span> in your wallet.
+            Click to unwrap to native SOL.
+          </label>
+        </div>
+        <Button class="note-btn font-small weight-semi" @click="unwrap">Unwrap SOL</Button>
       </div>
-      <Button class="note-btn font-small weight-semi" @click="unwrap">Unwrap SOL</Button>
-    </div>
 
-    <CoinSelect v-if="coinSelectShow" @onClose="() => (coinSelectShow = false)" @onSelect="onCoinSelect" />
-    <AmmIdSelect
-      :show="ammIdSelectShow"
-      :liquidity-list="ammIdSelectList"
-      :user-close="true"
-      @onClose="() => ((ammIdSelectShow = false), (ammIdSelectOld = true))"
-      @onSelect="onAmmIdSelect"
-    />
+      <CoinSelect v-if="coinSelectShow" @onClose="() => (coinSelectShow = false)" @onSelect="onCoinSelect" />
+      <AmmIdSelect
+        :show="ammIdSelectShow"
+        :liquidity-list="ammIdSelectList"
+        :user-close="true"
+        @onClose="() => ((ammIdSelectShow = false), (ammIdSelectOld = true))"
+        @onSelect="onAmmIdSelect"
+      />
 
-    <UnofficialPoolConfirmUser
-      v-if="userCheckUnofficialShow"
-      @onClose="() => (userCheckUnofficialShow = false)"
-      @onSelect="onUserCheckUnofficialSelect"
-    />
+      <UnofficialPoolConfirmUser
+        v-if="userCheckUnofficialShow"
+        @onClose="() => (userCheckUnofficialShow = false)"
+        @onSelect="onUserCheckUnofficialSelect"
+      />
 
-    <InputAmmIdOrMarket
-      v-if="ammIdOrMarketSearchShow"
-      @onClose="() => (ammIdOrMarketSearchShow = false)"
-      @onInput="onAmmIdOrMarketInput"
-    ></InputAmmIdOrMarket>
+      <InputAmmIdOrMarket
+        v-if="ammIdOrMarketSearchShow"
+        @onClose="() => (ammIdOrMarketSearchShow = false)"
+        @onInput="onAmmIdOrMarketInput"
+      ></InputAmmIdOrMarket>
 
-    <div class="card">
-      <div class="card-body">
-        <h4 class="weight-bold page-title">Swap</h4>
-
-        <CoinInput
-          v-model="fromCoinAmount"
-          :balance-offset="fromCoin && fromCoin.symbol === 'SOL' ? -0.05 : 0"
-          :mint-address="fromCoin ? fromCoin.mintAddress : ''"
-          :coin-name="fromCoin ? fromCoin.symbol : ''"
-          :balance="fromCoin ? fromCoin.balance : null"
-          :show-max="true"
-          :show-arrow="true"
-          @onInput="(amount) => (fromCoinAmount = amount)"
-          @onFocus="
-            () => {
-              fixedFromCoin = true
-            }
-          "
-          @onMax="
-            () => {
-              fixedFromCoin = true
-              fromCoinAmount = fromCoin && fromCoin.balance ? fromCoin.balance.fixed() : '0'
-            }
-          "
-          @onSelect="openFromCoinSelect"
-        />
-        <div class="swap-vertical">
-          <div>
-            <img src="@/assets/icons/swap-horizontal.svg" @click="changeCoinPosition" class="icon-cursor m-auto" />
-          </div>
-        </div>
-
-        <CoinInput
-          v-model="toCoinAmount"
-          :mint-address="toCoin ? toCoin.mintAddress : ''"
-          :coin-name="toCoin ? toCoin.symbol : ''"
-          :balance="toCoin ? toCoin.balance : null"
-          :show-max="true"
-          :show-arrow="true"
-          :disabled="true"
-          @onInput="(amount) => (toCoinAmount = amount)"
-          @onFocus="
-            () => {
-              fixedFromCoin = false
-            }
-          "
-          @onMax="
-            () => {
-              fixedFromCoin = false
-              toCoinAmount = toCoin.balance.fixed()
-            }
-          "
-          @onSelect="openToCoinSelect"
-        />
-
-        <div class="exchange-info">
-          <div
-            v-if="fromCoin && toCoin && isWrap && fromCoinAmount"
-            class="font-small weight-semi price-base fcc-container"
-          >
-            <span>
-              1 {{ fromCoin.symbol }} = 1
-              {{ toCoin.symbol }}
-            </span>
-          </div>
-          <div
-            v-else-if="fromCoin && toCoin && !isWrap && fromCoinAmount"
-            class="font-small weight-semi price-base fcc-container"
-          >
-            <span>
-              1 {{ hasPriceSwapped ? toCoin.symbol : fromCoin.symbol }} =
-              {{ hasPriceSwapped ? (1 / outToPirceValue).toFixed(6) : outToPirceValue }}
-              {{ hasPriceSwapped ? fromCoin.symbol : toCoin.symbol }}
-              <img
-                src="@/assets/icons/swap-vertical.svg"
-                @click="() => (hasPriceSwapped = !hasPriceSwapped)"
-                class="swap-icon"
-              />
-            </span>
-          </div>
-          <div
-            v-else-if="fromCoin && toCoin && marketAddress && market && asks && bids && fromCoinAmount"
-            class="font-small weight-semi price-base fcc-container"
-          >
-            <span>
-              1 {{ hasPriceSwapped ? toCoin.symbol : fromCoin.symbol }} =
-              {{ hasPriceSwapped ? (1 / outToPirceValue).toFixed(6) : outToPirceValue }}
-              {{ hasPriceSwapped ? fromCoin.symbol : toCoin.symbol }}
-              <img
-                src="@/assets/icons/swap-vertical.svg"
-                @click="() => (hasPriceSwapped = !hasPriceSwapped)"
-                class="swap-icon"
-              />
-            </span>
-          </div>
-        </div>
-
-        <div v-if="wallet.connected">
-          <div class="swap-actions fcsb-container">
-            <div class="swap-status font-medium weight-semi">
-              <div v-if="priceImpact <= 2" class="price-status">
-                <img class="status-icon" src="@/assets/icons/status-success.svg" />
-                <label class="font-medium weight-semi price-impact-green">Fair Price</label>
-              </div>
-              <div v-else-if="priceImpact > 2 && priceImpact <= 5" class="price-status">
-                <img class="status-icon" src="@/assets/icons/status-warning.svg" />
-                <label class="font-medium weight-semi price-impact-orange">Price impact Warning</label>
-              </div>
-              <div v-else-if="priceImpact > 5" class="price-status">
-                <img class="status-icon" src="@/assets/icons/status-error.svg" />
-                <label class="font-medium weight-semi price-impact-red">Price impact Warning</label>
-              </div>
+      <div class="card card-swap">
+        <div class="card-body">
+          <h4 class="weight-bold page-title">Swap</h4>
+          <div class="information">
+            <div class="tvl-info">
+              <p class="font-large weight-semi">TVL : ${{ TVL.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') }}</p>
             </div>
-            <div class="action-group">
-              <div class="action-btn-container fcc-container icon-cursor">
-                <div
-                  @click="
-                    () => {
-                      this.showSlippage = !this.showSlippage
-                    }
-                  "
-                >
-                  <img class="setting-icon" src="@/assets/icons/setting.svg" />
-                </div>
-                <div v-if="showSlippage" class="slippage-container">
-                  <input
-                    class="slippage-input"
-                    id="number"
-                    type="number"
-                    min="1"
-                    max="100"
-                    v-model="setting.slippage"
-                    @keypress="validateNumber"
-                  />
-                </div>
+
+            <div class="action-btn-group">
+              <div class="reload-btn icon-cursor" :class="activeSpinning ? 'active' : ''" @click="reloadTimer">
+                <img src="@/assets/icons/reload.svg" />
               </div>
 
-              <div
-                class="action-btn-container fcc-container icon-cursor"
-                :class="activeSpinning ? 'loading' : ''"
-                @click="reloadTimer"
+              <a
+                class="create-btn icon-cursor"
+                @click="
+                  () => {
+                    this.createdGlobalState ? (this.createPoolModalOpening = true) : this.createGlobalState()
+                  }
+                "
               >
-                <!-- {{ autoRefreshTime - countdown }} -->
-                <img class="load-icon" src="@/assets/icons/reload.svg" />
+                <div v-if="isSuperOwner" class="create-plus-btn font-small weight-semi">
+                  {{ this.createdGlobalState ? '+ Create pool' : '+ Create Program' }}
+                </div>
+              </a>
+            </div>
+          </div>
+          <CoinInput
+            v-model="fromCoinAmount"
+            :balance-offset="fromCoin && fromCoin.symbol === 'SOL' ? -0.05 : 0"
+            :mint-address="fromCoin ? fromCoin.mintAddress : ''"
+            :coin-name="fromCoin ? fromCoin.symbol : ''"
+            :balance="fromCoin ? fromCoin.balance : null"
+            :show-max="true"
+            :show-arrow="true"
+            @onInput="(amount) => (fromCoinAmount = amount)"
+            @onFocus="
+              () => {
+                fixedFromCoin = true
+              }
+            "
+            @onMax="
+              () => {
+                fixedFromCoin = true
+                fromCoinAmount = fromCoin && fromCoin.balance ? fromCoin.balance.fixed() : '0'
+              }
+            "
+            @onSelect="openFromCoinSelect"
+          />
+          <div class="swap-vertical">
+            <div>
+              <img src="@/assets/icons/swap-horizontal.svg" @click="changeCoinPosition" class="icon-cursor m-auto" />
+            </div>
+          </div>
+
+          <CoinInput
+            v-model="toCoinAmount"
+            :mint-address="toCoin ? toCoin.mintAddress : ''"
+            :coin-name="toCoin ? toCoin.symbol : ''"
+            :balance="toCoin ? toCoin.balance : null"
+            :show-max="true"
+            :show-arrow="true"
+            :disabled="true"
+            @onInput="(amount) => (toCoinAmount = amount)"
+            @onFocus="
+              () => {
+                fixedFromCoin = false
+              }
+            "
+            @onMax="
+              () => {
+                fixedFromCoin = false
+                toCoinAmount = toCoin.balance.fixed()
+              }
+            "
+            @onSelect="openToCoinSelect"
+          />
+
+          <div class="exchange-info">
+            <div
+              v-if="fromCoin && toCoin && isWrap && fromCoinAmount"
+              class="font-small weight-semi price-base fcc-container"
+            >
+              <span>
+                1 {{ fromCoin.symbol }} = 1
+                {{ toCoin.symbol }}
+              </span>
+            </div>
+            <div
+              v-else-if="fromCoin && toCoin && !isWrap && fromCoinAmount"
+              class="font-small weight-semi price-base fcc-container"
+            >
+              <span>
+                1 {{ hasPriceSwapped ? toCoin.symbol : fromCoin.symbol }} =
+                {{ hasPriceSwapped ? (1 / outToPirceValue).toFixed(6) : outToPirceValue }}
+                {{ hasPriceSwapped ? fromCoin.symbol : toCoin.symbol }}
+                <img
+                  src="@/assets/icons/swap-vertical.svg"
+                  @click="() => (hasPriceSwapped = !hasPriceSwapped)"
+                  class="swap-icon"
+                />
+              </span>
+            </div>
+            <div
+              v-else-if="fromCoin && toCoin && marketAddress && market && asks && bids && fromCoinAmount"
+              class="font-small weight-semi price-base fcc-container"
+            >
+              <span>
+                1 {{ hasPriceSwapped ? toCoin.symbol : fromCoin.symbol }} =
+                {{ hasPriceSwapped ? (1 / outToPirceValue).toFixed(6) : outToPirceValue }}
+                {{ hasPriceSwapped ? fromCoin.symbol : toCoin.symbol }}
+                <img
+                  src="@/assets/icons/swap-vertical.svg"
+                  @click="() => (hasPriceSwapped = !hasPriceSwapped)"
+                  class="swap-icon"
+                />
+              </span>
+            </div>
+          </div>
+
+          <div v-if="wallet.connected">
+            <div class="swap-actions fcsb-container">
+              <div class="swap-status font-medium weight-semi">
+                <div v-if="priceImpact <= 2" class="price-status">
+                  <img class="status-icon" src="@/assets/icons/status-success.svg" />
+                  <label class="font-medium weight-semi price-impact-green">Fair Price</label>
+                </div>
+                <div v-else-if="priceImpact > 2 && priceImpact <= 5" class="price-status">
+                  <img class="status-icon" src="@/assets/icons/status-warning.svg" />
+                  <label class="font-medium weight-semi price-impact-orange">Price impact Warning</label>
+                </div>
+                <div v-else-if="priceImpact > 5" class="price-status">
+                  <img class="status-icon" src="@/assets/icons/status-error.svg" />
+                  <label class="font-medium weight-semi price-impact-red">Price impact Warning</label>
+                </div>
+              </div>
+              <div class="action-group">
+                <div class="action-btn-container fcc-container icon-cursor">
+                  <div
+                    @click="
+                      () => {
+                        this.showSlippage = !this.showSlippage
+                      }
+                    "
+                  >
+                    <img class="setting-icon" src="@/assets/icons/setting.svg" />
+                  </div>
+                  <div v-if="showSlippage" class="slippage-container">
+                    <input
+                      class="slippage-input"
+                      id="number"
+                      type="number"
+                      min="1"
+                      max="100"
+                      v-model="setting.slippage"
+                      @keypress="validateNumber"
+                    />
+                  </div>
+                </div>
+
+                <div
+                  class="action-btn-container fcc-container icon-cursor"
+                  :class="activeSpinning ? 'loading' : ''"
+                  @click="reloadTimer"
+                >
+                  <!-- {{ autoRefreshTime - countdown }} -->
+                  <img class="load-icon" src="@/assets/icons/reload.svg" />
+                </div>
+              </div>
+            </div>
+
+            <div class="price-info">
+              <div class="info-box">
+                <span class="name">
+                  <label class="font-small weight-bold">Pathway</label>
+                  <Tooltip placement="bottomLeft">
+                    <template slot="title">
+                      This trade routes though the following tokens to give you the best price
+                    </template>
+                    <img src="@/assets/icons/info.svg" class="tooltip-icon icon-cursor" />
+                  </Tooltip>
+                </span>
+
+                <span v-if="fromCoin && toCoin" class="pathway">
+                  <div class="coin-box-container">
+                    <div class="coin-box">
+                      <CoinIcon :mint-address="fromCoin.mintAddress" />
+                      <span class="font-small weight-semi">{{ fromCoin.symbol }}</span>
+                    </div>
+                  </div>
+                  <img class="fst" src="@/assets/icons/swap-right.svg" />
+                  <div v-if="midTokenSymbol" class="coin-box-container">
+                    <div class="coin-box">
+                      <CoinIcon :mint-address="midTokenMint" />
+                      <span class="font-small weight-semi">{{ midTokenSymbol }}</span>
+                    </div>
+                  </div>
+                  <img v-if="midTokenSymbol" class="fst" src="@/assets/icons/swap-right.svg" />
+                  <div class="coin-box-container">
+                    <div class="coin-box">
+                      <CoinIcon :mint-address="toCoin.mintAddress" />
+                      <span class="font-small weight-semi">{{ toCoin.symbol }}</span>
+                    </div>
+                  </div>
+                </span>
+              </div>
+
+              <div v-if="priceImpact" class="info-box">
+                <span class="name">
+                  <label class="font-small weight-bold"> Price Impact </label>
+                  <Tooltip placement="bottomLeft">
+                    <template slot="title">
+                      The difference between the market price and estimated price due to trade size
+                    </template>
+                    <img src="@/assets/icons/info.svg" class="tooltip-icon icon-cursor" />
+                  </Tooltip>
+                </span>
+                <span class="value">
+                  <label class="font-small weight-bold"> {{ priceImpact.toFixed(2) }}% </label>
+                </span>
+              </div>
+
+              <div v-if="fromCoin && toCoin && fromCoinAmount && toCoinWithSlippage" class="info-box">
+                <span class="name">
+                  <label class="font-small weight-bold">Minimum Received</label>
+                  <Tooltip placement="bottomLeft">
+                    <template slot="title"> The least amount of tokens you will receive for this trade </template>
+                    <img src="@/assets/icons/info.svg" class="tooltip-icon icon-cursor" />
+                  </Tooltip>
+                </span>
+                <span class="value">
+                  <label class="font-small weight-bold"> {{ toCoinWithSlippage }} {{ toCoin.symbol }} </label>
+                </span>
               </div>
             </div>
           </div>
 
-          <div class="price-info">
-            <div class="info-box">
-              <span class="name">
-                <label class="font-small weight-bold">Pathway</label>
-                <Tooltip placement="bottomLeft">
-                  <template slot="title">
-                    This trade routes though the following tokens to give you the best price
-                  </template>
-                  <img src="@/assets/icons/info.svg" class="tooltip-icon icon-cursor" />
-                </Tooltip>
-              </span>
-
-              <span v-if="fromCoin && toCoin" class="pathway">
-                <div class="coin-box-container">
-                  <div class="coin-box">
-                    <CoinIcon :mint-address="fromCoin.mintAddress" />
-                    <span class="font-small weight-semi">{{ fromCoin.symbol }}</span>
-                  </div>
-                </div>
-                <img class="fst" src="@/assets/icons/swap-right.svg" />
-                <div v-if="midTokenSymbol" class="coin-box-container">
-                  <div class="coin-box">
-                    <CoinIcon :mint-address="midTokenMint" />
-                    <span class="font-small weight-semi">{{ midTokenSymbol }}</span>
-                  </div>
-                </div>
-                <img v-if="midTokenSymbol" class="fst" src="@/assets/icons/swap-right.svg" />
-                <div class="coin-box-container">
-                  <div class="coin-box">
-                    <CoinIcon :mint-address="toCoin.mintAddress" />
-                    <span class="font-small weight-semi">{{ toCoin.symbol }}</span>
-                  </div>
-                </div>
-              </span>
-            </div>
-
-            <div v-if="priceImpact" class="info-box">
-              <span class="name">
-                <label class="font-small weight-bold"> Price Impact </label>
-                <Tooltip placement="bottomLeft">
-                  <template slot="title">
-                    The difference between the market price and estimated price due to trade size
-                  </template>
-                  <img src="@/assets/icons/info.svg" class="tooltip-icon icon-cursor" />
-                </Tooltip>
-              </span>
-              <span class="value">
-                <label class="font-small weight-bold"> {{ priceImpact.toFixed(2) }}% </label>
-              </span>
-            </div>
-
-            <div v-if="fromCoin && toCoin && fromCoinAmount && toCoinWithSlippage" class="info-box">
-              <span class="name">
-                <label class="font-small weight-bold">Minimum Received</label>
-                <Tooltip placement="bottomLeft">
-                  <template slot="title"> The least amount of tokens you will receive for this trade </template>
-                  <img src="@/assets/icons/info.svg" class="tooltip-icon icon-cursor" />
-                </Tooltip>
-              </span>
-              <span class="value">
-                <label class="font-small weight-bold"> {{ toCoinWithSlippage }} {{ toCoin.symbol }} </label>
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- <div v-if="officialPool === false">
+          <!-- <div v-if="officialPool === false">
           <div style="margin: 10px">
             <div>AMM ID:</div>
             <div>
@@ -257,69 +281,72 @@
           </div>
         </div> -->
 
-        <div v-if="!wallet.connected" class="btn-container">
-          <Button class="btn-transparent font-large weight-bold" ghost @click="$accessor.wallet.openModal"> Connect wallet </Button>
-        </div>
+          <div v-if="!wallet.connected" class="btn-container">
+            <Button class="btn-transparent font-large weight-bold" ghost @click="$accessor.wallet.openModal">
+              Connect wallet
+            </Button>
+          </div>
 
-        <div v-else-if="!(officialPool || (!officialPool && userCheckUnofficial))" class="btn-container">
-          <Button
-            class="btn-transparent font-large weight-bold"
-            ghost
-            @click="
-              () => {
-                setTimeout(() => {
-                  userCheckUnofficialShow = true
-                }, 1)
-              }
-            "
-          >
-            Confirm Risk Warning
-          </Button>
-        </div>
-
-        <div v-else class="btn-container">
-          <Button
-            class="btn-transparent font-large weight-bold"
-            :disabled="
-              !fromCoin ||
-              !fromCoinAmount ||
-              !toCoin ||
-              !this.mainAmmId ||
-              (!marketAddress && !lpMintAddress && !isWrap && !best_dex_type) ||
-              !initialized ||
-              loading ||
-              checkFromCoinAmount() || // not enough SOL to swap SOL to another coin
-              (get(liquidity.infos, `${lpMintAddress}.status`) &&
-                get(liquidity.infos, `${lpMintAddress}.status`) !== 1) ||
-              swaping
-            "
-            :loading="swaping"
-            :class="`${priceImpact > 5 ? '' : priceImpact > 2 ? '' : ''}`"
-            @click="placeOrder"
-          >
-            <template v-if="!fromCoin || !toCoin"> Select</template>
-            <template v-else-if="(!marketAddress && !lpMintAddress && !isWrap && !best_dex_type) || !initialized">
-              Insufficient liquidity for this trade
-            </template>
-            <template v-else-if="!fromCoinAmount"> Enter an amount </template>
-            <template v-else-if="loading"> Updating price information </template>
-            <template v-else-if="checkFromCoinAmount()"> Insufficient {{ fromCoin.symbol }} balance </template>
-            <template
-              v-else-if="
-                get(liquidity.infos, `${lpMintAddress}.status`) && get(liquidity.infos, `${lpMintAddress}.status`) !== 1
+          <div v-else-if="!(officialPool || (!officialPool && userCheckUnofficial))" class="btn-container">
+            <Button
+              class="btn-transparent font-large weight-bold"
+              ghost
+              @click="
+                () => {
+                  setTimeout(() => {
+                    userCheckUnofficialShow = true
+                  }, 1)
+                }
               "
             >
-              Pool coming soon
-            </template>
-            <template v-else-if="best_dex_type === 'multi' && (needWrapSol() || needCreateTokens())"
-              >Prepare two-step swap</template
-            >
-            <template v-else>{{ isWrap ? 'Unwrap' : priceImpact > 5 ? 'Exchange' : 'Exchange' }}</template>
-          </Button>
-        </div>
-          <b style="color:#d2cbcb"> <i>If you have a new pair suggestion please contact us on telegram.</i></b> 
+              Confirm Risk Warning
+            </Button>
+          </div>
 
-        <!-- <div v-if="solBalance && +solBalance.balance.fixed() - 0.05 <= 0" class="not-enough-sol-alert">
+          <div v-else class="btn-container">
+            <Button
+              class="btn-transparent font-large weight-bold"
+              :disabled="
+                !fromCoin ||
+                !fromCoinAmount ||
+                !toCoin ||
+                !this.mainAmmId ||
+                (!marketAddress && !lpMintAddress && !isWrap && !best_dex_type) ||
+                !initialized ||
+                loading ||
+                checkFromCoinAmount() || // not enough SOL to swap SOL to another coin
+                (get(liquidity.infos, `${lpMintAddress}.status`) &&
+                  get(liquidity.infos, `${lpMintAddress}.status`) !== 1) ||
+                swaping
+              "
+              :loading="swaping"
+              :class="`${priceImpact > 5 ? '' : priceImpact > 2 ? '' : ''}`"
+              @click="placeOrder"
+            >
+              <template v-if="!fromCoin || !toCoin"> Select</template>
+              <template v-else-if="(!marketAddress && !lpMintAddress && !isWrap && !best_dex_type) || !initialized">
+                Insufficient liquidity for this trade
+              </template>
+              <template v-else-if="!fromCoinAmount"> Enter an amount </template>
+              <template v-else-if="loading"> Updating price information </template>
+              <template v-else-if="checkFromCoinAmount()"> Insufficient {{ fromCoin.symbol }} balance </template>
+              <template
+                v-else-if="
+                  get(liquidity.infos, `${lpMintAddress}.status`) &&
+                  get(liquidity.infos, `${lpMintAddress}.status`) !== 1
+                "
+              >
+                Pool coming soon
+              </template>
+              <template v-else-if="best_dex_type === 'multi' && (needWrapSol() || needCreateTokens())"
+                >Prepare two-step swap</template
+              >
+              <template v-else>{{ isWrap ? 'Unwrap' : priceImpact > 5 ? 'Exchange' : 'Exchange' }}</template>
+            </Button>
+          </div>
+          <b style="color: #d2cbcb"> <i>If you have a new pair suggestion please contact us on telegram.</i></b>
+
+          <!-- <div v-if="solBalance && +solBalance.balance.fixed() - 0.05 <= 0" class="not-enough-sol-alert">
           <span class="caution-text">Caution: Your SOL balance is low</span>
 
           <Tooltip placement="bottomLeft">
@@ -330,6 +357,10 @@
             <Icon type="question-circle" />
           </Tooltip>
         </div> -->
+        </div>
+      </div>
+      <div class="card-chart">
+        <div class="card card-chart-container"><SwapTokenInfo /></div>
       </div>
     </div>
   </div>
@@ -388,6 +419,7 @@ export default Vue.extend({
   data() {
     return {
       TOKENS,
+      TVL: 0 as number,
       // should check if user have enough SOL to have a swap
       solBalance: null as TokenAmount | null,
       wsolBalance: null as TokenAmount | null,
@@ -459,7 +491,6 @@ export default Vue.extend({
 
       endpoint_multi_crp: 'Two-Step Swap with CRP',
       endpoint_multi_usdc: 'Two-Step Swap with USDC',
-      TVL: 0 as number,
       activeSpinning: false as boolean,
       showInformations: false as boolean,
       showSlippage: false as boolean,
@@ -475,18 +506,18 @@ export default Vue.extend({
   watch: {
     fromCoinAmount(newAmount: string, oldAmount: string) {
       this.$nextTick(() => {
-        console.log("start fromCoinAmount()")
+        console.log('start fromCoinAmount()')
         if (!inputRegex.test(escapeRegExp(newAmount))) {
           this.fromCoinAmount = oldAmount
         } else {
           this.updateAmounts()
         }
-        console.log("end fromCoinAmount()")
+        console.log('end fromCoinAmount()')
       })
     },
     'wallet.tokenAccounts': {
       handler(newTokenAccounts: any) {
-        console.log("start wallet.tokenAccounts()")
+        console.log('start wallet.tokenAccounts()')
         this.updateCoinInfo(newTokenAccounts)
         this.findMarket()
         if (this.mainAmmId) {
@@ -503,20 +534,19 @@ export default Vue.extend({
         // @ts-ignore
         this.setCoinFromMint(ammId, from, to)
 
-        if(!to){
+        if (!to) {
           this.toCoin = Object.values(TOKENS).find((item) => item.symbol === 'NNI')
         }
-        
-        if(!from){
+
+        if (!from) {
           this.fromCoin = Object.values(TOKENS).find((item) => item.symbol === 'USDC')
         }
-        console.log("end wallet.tokenAccounts()")
-        
+        console.log('end wallet.tokenAccounts()')
       },
       deep: true
     },
     fromCoin(newCoin, oldCoin) {
-      console.log("start fromCoin()")
+      console.log('start fromCoin()')
       if (
         !this.setCoinFromMintLoading &&
         (oldCoin === null || newCoin === null || newCoin.mintAddress !== oldCoin.mintAddress)
@@ -527,9 +557,8 @@ export default Vue.extend({
         this.fromCoinAmount = ''
         this.toCoinAmount = ''
         this.ammIdSelectOld = false
-        
       }
-      console.log("end fromCoin()")
+      console.log('end fromCoin()')
     },
     baseUnsettledAmount() {
       this.isSettlingBase = false
@@ -538,7 +567,7 @@ export default Vue.extend({
       this.isSettlingQuote = false
     },
     toCoin(newCoin, oldCoin) {
-      console.log("start toCoin()")
+      console.log('start toCoin()')
       if (
         !this.setCoinFromMintLoading &&
         (oldCoin === null || newCoin === null || newCoin.mintAddress !== oldCoin.mintAddress)
@@ -550,17 +579,17 @@ export default Vue.extend({
         this.toCoinAmount = ''
         this.ammIdSelectOld = false
       }
-      console.log("end toCoin()")
+      console.log('end toCoin()')
     },
     market() {
-      console.log("start market()")
+      console.log('start market()')
       this.baseSymbol = ''
       this.baseUnsettledAmount = 0
       this.quoteSymbol = ''
       this.quoteUnsettledAmount = 0
       this.unsettledOpenOrders = null as any
       this.fetchUnsettledByMarket()
-      console.log("end market()")
+      console.log('end market()')
     },
     marketAddress() {
       this.updateAmounts()
@@ -620,18 +649,6 @@ export default Vue.extend({
   methods: {
     gt,
     get,
-    validateNumber(event: { target: { value: number }; preventDefault: () => void }) {
-      if (event.target.value > 10) {
-        event.preventDefault()
-      }
-    },
-    openFromCoinSelect() {
-      this.selectFromCoin = true
-      this.closeAllModal('coinSelectShow')
-      setTimeout(() => {
-        this.coinSelectShow = true
-      }, 1)
-    },
     async getTvl() {
       let cur_date = new Date().getTime()
       if (window.localStorage.TVL_last_updated) {
@@ -670,6 +687,18 @@ export default Vue.extend({
       window.localStorage.TVL_last_updated = new Date().getTime()
       window.localStorage.TVL = this.TVL
     },
+    validateNumber(event: { target: { value: number }; preventDefault: () => void }) {
+      if (event.target.value > 10) {
+        event.preventDefault()
+      }
+    },
+    openFromCoinSelect() {
+      this.selectFromCoin = true
+      this.closeAllModal('coinSelectShow')
+      setTimeout(() => {
+        this.coinSelectShow = true
+      }, 1)
+    },
     async flush() {
       clearInterval(this.marketTimer)
       this.countdown = 0
@@ -686,18 +715,18 @@ export default Vue.extend({
       }, 1)
     },
     onCoinSelect(tokenInfo: TokenInfo) {
-      console.log("start onCoinSelect")
+      console.log('start onCoinSelect')
       if (tokenInfo !== null) {
         if (this.selectFromCoin) {
           this.fromCoin = cloneDeep(tokenInfo)
-          console.log("fromCoin", this.fromCoin)
+          console.log('fromCoin', this.fromCoin)
           if (this.toCoin?.mintAddress === tokenInfo.mintAddress) {
             this.toCoin = null
             this.changeCoinAmountPosition()
           }
         } else {
           this.toCoin = cloneDeep(tokenInfo)
-          console.log("toCoin", this.toCoin)
+          console.log('toCoin', this.toCoin)
           if (this.fromCoin?.mintAddress === tokenInfo.mintAddress) {
             this.fromCoin = null
             this.changeCoinAmountPosition()
@@ -719,10 +748,10 @@ export default Vue.extend({
         }
       }
       this.coinSelectShow = false
-      console.log("end onCoinSelect")
+      console.log('end onCoinSelect')
     },
     setCoinFromMint(ammIdOrMarket: string | undefined, from: string | undefined, to: string | undefined) {
-      console.log("start setCoinFromMint")
+      console.log('start setCoinFromMint')
       this.setCoinFromMintLoading = true
       let fromCoin, toCoin
       try {
@@ -768,7 +797,7 @@ export default Vue.extend({
         this.setCoinFromMintLoading = false
         this.findMarket()
       }, 1)
-      console.log("end setCoinFromMint")
+      console.log('end setCoinFromMint')
     },
     needUserCheckUnofficialShow(ammId: string) {
       if (!this.wallet.connected) {
@@ -780,7 +809,7 @@ export default Vue.extend({
       }, 1)
     },
     onAmmIdSelect(liquidityInfo: LiquidityPoolInfo | undefined) {
-      console.log("start onAmmIdSelect")
+      console.log('start onAmmIdSelect')
       this.ammIdSelectShow = false
       if (liquidityInfo) {
         this.lpMintAddress = liquidityInfo.lp.mintAddress
@@ -792,7 +821,7 @@ export default Vue.extend({
         this.ammIdSelectOld = true
         this.findMarket()
       }
-      console.log("end onAmmIdSelect")
+      console.log('end onAmmIdSelect')
     },
     onAmmIdOrMarketInput(ammIdOrMarket: string) {
       this.ammIdOrMarketSearchShow = false
@@ -876,7 +905,7 @@ export default Vue.extend({
       )
     },
     findMarket() {
-      console.log("start findMarket")
+      console.log('start findMarket')
       try {
         this.available_dex = []
         this.lpMintAddress = ''
@@ -1044,8 +1073,7 @@ export default Vue.extend({
           this.lpMintAddress = ''
           this.isWrap = false
         }
-      }
-      catch(e){
+      } catch (e) {
         this.mainAmmId = undefined
         this.endpoint = ''
         this.marketAddress = ''
@@ -1053,10 +1081,10 @@ export default Vue.extend({
         this.lpMintAddress = ''
         this.isWrap = false
       }
-      console.log("end findMarket")
+      console.log('end findMarket')
     },
     getOrderBooks() {
-      console.log("start getOrderBooks")
+      console.log('start getOrderBooks')
       this.loading = true
       this.asksAndBidsLoading = true
       this.countdown = this.autoRefreshTime
@@ -1066,7 +1094,7 @@ export default Vue.extend({
         const { bids, asks } = marketInfo
         getMultipleAccounts(conn, [bids, asks], commitment)
           .then((infos) => {
-            console.log("getMultipleAccounts->1", infos.length)
+            console.log('getMultipleAccounts->1', infos.length)
             infos.forEach((info) => {
               // @ts-ignore
               const data = info.account.data
@@ -1088,10 +1116,10 @@ export default Vue.extend({
       } else {
         this.loading = false
       }
-      console.log("end getOrderBooks")
+      console.log('end getOrderBooks')
     },
     updateAmounts() {
-      console.log("start updateAmounts()")
+      console.log('start updateAmounts()')
       let max_coinAmount = 0
 
       try {
@@ -1105,7 +1133,7 @@ export default Vue.extend({
             return
           }
           this.available_dex.forEach((dex_type) => {
-            console.log("dex type", dex_type)
+            console.log('dex type', dex_type)
             if (dex_type == ENDPOINT_SRM) {
               if (this.marketAddress && this.market && this.asks && this.bids && !this.asksAndBidsLoading) {
                 // serum
@@ -1147,8 +1175,8 @@ export default Vue.extend({
                 }
               }
             } else if (dex_type == ENDPOINT_CRP || dex_type == ENDPOINT_RAY) {
-              console.log("this.fromCoin!.mintAddress", this.fromCoin!.mintAddress)
-              console.log("this.toCoin!.mintAddress", this.toCoin!.mintAddress)
+              console.log('this.fromCoin!.mintAddress', this.fromCoin!.mintAddress)
+              console.log('this.toCoin!.mintAddress', this.toCoin!.mintAddress)
               // @ts-ignore
               const poolInfo = (dex_type == ENDPOINT_CRP ? findBestCropperLP : findBestLP)(
                 this.$accessor.liquidity.infos,
@@ -1339,7 +1367,7 @@ export default Vue.extend({
         this.endpoint = ''
         this.midTokenSymbol = undefined
       }
-      console.log("end updateAmounts()")
+      console.log('end updateAmounts()')
     },
     setMarketTimer() {
       this.marketTimer = setInterval(() => {
@@ -1865,8 +1893,15 @@ export default Vue.extend({
 </script>
 
 <style lang="less" scoped>
+.btn-container {
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  padding: 3px;
+  height: auto;
+}
+
 .swap.container {
-  max-width: 1350px;
+  max-width: 1250px;
   width: 100%;
   margin-top: 50px;
   margin-bottom: 20px;
@@ -1874,10 +1909,13 @@ export default Vue.extend({
   margin-left: auto;
   margin-right: auto;
   min-height: calc(100vh - 64px - 82px);
-  flex-direction: row;
-  place-content: center;
-  align-items: center;
+  align-items: flex-start !important;
+  justify-content: space-between;
   display: flex;
+
+  @media @max-lg-tablet {
+    display: block;
+  }
 
   .note-unwrapped-sol {
     max-width: 440px;
@@ -1908,7 +1946,7 @@ export default Vue.extend({
       &:hover {
         background: @gradient-color02;
       }
-      
+
       @media @max-lg-tablet {
         margin: 10px auto auto auto;
         display: flex;
@@ -1918,20 +1956,79 @@ export default Vue.extend({
     }
   }
 
+  .card-swap {
+    max-width: 400px;
+    min-width: 400px;
+  }
+
+  .card-chart {
+    width: 100%;
+    padding-left: 30px;
+
+    @media @max-lg-tablet {
+      padding-left: 0;
+      margin-top: 30px;
+    }
+    .card-chart-container {
+      padding: 20px;
+      width: 100%;
+    }
+  }
+
   .card {
     display: inline-block;
     position: relative;
     z-index: 0;
-    max-width: 440px;
-    margin: auto;
-    box-shadow: 0 0 5px #2E1664;
+    box-shadow: 0 0 5px #2e1664;
     border-radius: 18px;
     background: linear-gradient(#ac72d6e1, #4b55e7c2);
-    min-width: 440px;
 
     .card-body {
       background: transparent;
       padding: 12px 18px;
+
+      .information {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        @media @max-sl-mobile {
+          width: 100%;
+        }
+
+        .tvl-info {
+          margin-right: 18px;
+        }
+
+        .action-btn-group {
+          display: flex;
+          align-items: center;
+
+          .reload-btn {
+            background: linear-gradient(rgba(75, 85, 231, 0.65098), rgba(182, 97, 150, 0.74902));
+            border-radius: 8px;
+            padding: 6px;
+            margin-right: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            @media @max-lg-tablet {
+              margin-left: 4px;
+            }
+
+            .reload-icon {
+              width: 18px;
+              height: 18px;
+            }
+
+            &.active .reload-icon {
+              transform: rotate(360deg);
+              transition: all 1s ease-in-out;
+            }
+          }
+        }
+      }
 
       .page-title {
         letter-spacing: 0.5px;
@@ -2082,30 +2179,21 @@ export default Vue.extend({
       }
     }
 
-    @media @max-sl-mobile {
-      min-width: calc(100vw - 16px);
+    @media @max-lg-tablet {
+      min-width: 100%;
     }
 
     // @media @max-sm-mobile {
-      
 
     // }
 
     // @media @max-xs-mobile {
-      
 
     // }
   }
 }
 
 // global stylesheet
-.btn-container {
-  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
-  border-radius: 8px;
-  padding: 3px;
-  height: auto;
-}
-
 .btn-transparent {
   background: transparent;
   border-radius: 8px;
@@ -2138,7 +2226,7 @@ export default Vue.extend({
   margin-bottom: -8px;
 
   div {
-    background: @gradient-color-icon;
+    background: linear-gradient(rgba(75, 85, 231, 0.65098), rgba(182, 97, 150, 0.74902));
     width: 28px;
     height: 28px;
     display: flex;

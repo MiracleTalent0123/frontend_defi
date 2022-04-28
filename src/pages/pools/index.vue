@@ -38,7 +38,14 @@
                   >Need a step by step guide on how to provide Liquidity?</label
                 >
                 <div class="learn-btn-container">
-                  <button class="learn-btn font-small weight-semi spacing-large"><a href="https://docs.neonomad.finance/neonomad-documentation/defi-tutorials/providing-liquidity" style="color:#fff" target="_blank">Documentation</a></button>
+                  <button class="learn-btn font-small weight-semi spacing-large">
+                    <a
+                      href="https://docs.neonomad.finance/neonomad-documentation/defi-tutorials/providing-liquidity"
+                      style="color: #fff"
+                      target="_blank"
+                      >Documentation</a
+                    >
+                  </button>
                 </div>
               </Col>
               <Col :sm="10" :xs="0">
@@ -48,7 +55,7 @@
           </div>
         </div>
 
-        <div class="pools-content" :class="showGuide ? 'guide-enabled' : ''">
+        <div class="card pools-content" :class="showGuide ? 'guide-enabled' : ''">
           <div class="pools-head fcsb-container">
             <h3 class="title weight-bold">Liquidity Pools</h3>
             <div class="information">
@@ -65,11 +72,13 @@
                   class="create-btn icon-cursor"
                   @click="
                     () => {
-                      this.createdGlobalState ? this.createPoolModalOpening = true : this.createGlobalState()
+                      this.createdGlobalState ? (this.createPoolModalOpening = true) : this.createGlobalState()
                     }
                   "
                 >
-                  <div v-if="isSuperOwner" class="create-plus-btn font-small weight-semi">{{ this.createdGlobalState ? "+ Create pool" : "+ Create Program"}}</div>
+                  <div v-if="isSuperOwner" class="create-plus-btn font-small weight-semi">
+                    {{ this.createdGlobalState ? '+ Create pool' : '+ Create Program' }}
+                  </div>
                 </a>
               </div>
             </div>
@@ -161,7 +170,7 @@
                   :class="searchCertifiedFarm === 'permissionless' ? 'active-item' : ''"
                   @click="activeSearch('permissionless')"
                 >
-                 All Pools
+                  All Pools
                 </div>
                 <div
                   class="collapse-item text-center font-medium weight-semi icon-cursor"
@@ -816,6 +825,7 @@ Vue.use(Vco)
   }
 })
 export default class Pools extends Vue {
+  [x: string]: any
   createdGlobalState: boolean = false
   isSuperOwner: boolean = false
   true: any = true
@@ -883,7 +893,7 @@ export default class Pools extends Vue {
   refreshThePage() {
     this.showPool(this.searchName, this.currentPage)
   }
-  @Watch('$accessor.wallet.connected', { immediate: true, deep: true }) 
+  @Watch('$accessor.wallet.connected', { immediate: true, deep: true })
   changeConnection() {
     this.checkGlobalState()
   }
@@ -1058,7 +1068,9 @@ export default class Pools extends Vue {
     this.farmInfo = cloneDeep(poolInfo)
 
     // @ts-ignore
-    const currentPoolInfo = Object.values(this.$accessor.liquidity.infos).find((p: any) => p.ammId === this.farmInfo.ammId)
+    const currentPoolInfo = Object.values(this.$accessor.liquidity.infos).find(
+      (p: any) => p.ammId === this.farmInfo.ammId
+    )
     const totalSupply = getTotalSupply(currentPoolInfo)
 
     const pcBalance = (
@@ -1391,26 +1403,25 @@ export default class Pools extends Vue {
     const conn = this.$web3
     getAMMGlobalStateAccount(conn, true).then((result: any) => {
       const wallet = (this as any).$wallet
-        const walletStr = wallet.publicKey.toBase58()
-      if(result){
+      const walletStr = wallet.publicKey.toBase58()
+      if (result) {
         const owner = result.stateOwner.toBase58()
-        console.log("walletStr", walletStr)
-        console.log("state owner",  owner)
+        console.log('walletStr', walletStr)
+        console.log('state owner', owner)
         this.createdGlobalState = true
         this.isSuperOwner = walletStr === owner
-      }
-      else {
+      } else {
         this.createdGlobalState = false
         this.isSuperOwner = walletStr === FARM_INITIAL_SUPER_OWNER
       }
     })
   }
   async createGlobalState() {
-    if(this.wallet.connected){
+    if (this.wallet.connected) {
       const conn = this.$web3
       const wallet = (this as any).$wallet
       updateGlobalState(conn, wallet).then((result: any) => {
-        console.log("tx = ", result)
+        console.log('tx = ', result)
         this.checkGlobalState()
       })
     }
@@ -1432,20 +1443,18 @@ export default class Pools extends Vue {
           if (hash) {
             hash = hash.substring(1)
 
-            if(hash == 'createpool'){
-              if(this.wallet.connected){
+            if (hash == 'createpool') {
+              if (this.wallet.connected) {
                 this.createPoolModalOpening = true
               }
             } else {
               this.searchName = hash
             }
-
           } else {
             const query = new URLSearchParams(window.location.search)
             if (query.get('s')) this.searchName = query.get('s') as string
 
             if (query.get('d')) this.displayPoolID = query.get('d') as string
-
           }
 
           this.poolLoaded = true
@@ -1481,10 +1490,10 @@ export default class Pools extends Vue {
 
     let tvl = 0
     const pools = this.poolsFormated() as any[]
-    pools.forEach(pool => {
+    pools.forEach((pool) => {
       tvl += pool.liquidity
-    });
-    
+    })
+
     this.TVL = Math.round(tvl)
 
     window.localStorage.TVL_last_updated = new Date().getTime()
@@ -1494,7 +1503,7 @@ export default class Pools extends Vue {
   async flush() {
     this.loading = true
     this.pools = this.poolsFormated()
-    
+
     this.showPool(this.searchName, this.currentPage)
     this.loading = false
     this.countdown = 0
@@ -1535,7 +1544,6 @@ export default class Pools extends Vue {
   box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
   border-radius: 8px;
   padding: 3px;
-  width: 95px;
   height: auto;
 }
 
@@ -1561,7 +1569,7 @@ export default class Pools extends Vue {
 }
 
 .lp-iconscontainer {
-  background: linear-gradient(97.63deg, #280C86 -29.92%, #B122B6 103.89%);
+  background: linear-gradient(97.63deg, #280c86 -29.92%, #b122b6 103.89%);
   background-origin: border-box;
   padding: 2px;
   border-radius: 8px;
@@ -1653,7 +1661,7 @@ export default class Pools extends Vue {
         width: calc(100% - 40px);
         max-width: 420px;
         padding: 18px;
-        background: linear-gradient(rgba(75, 85, 231, 0.95),rgb(182, 97, 150));
+        background: linear-gradient(rgba(75, 85, 231, 0.95), rgb(182, 97, 150));
         border-radius: 18px;
         z-index: 999;
 
@@ -1867,7 +1875,7 @@ export default class Pools extends Vue {
                 padding: 6px 10px;
                 border: 2px solid @color-blue500;
                 border-radius: 8px;
-                background:linear-gradient(rgba(75,85,231,.95),#b66196);
+                background: linear-gradient(rgba(75, 85, 231, 0.95), #b66196);
 
                 label {
                   color: #fff;
@@ -1980,7 +1988,7 @@ export default class Pools extends Vue {
               // visibility: hidden;
               // opacity: 0;
               transition: visibility 0s, opacity 0.5s linear;
-              background: linear-gradient(rgb(75, 85, 231),rgb(182, 97, 150));
+              background: linear-gradient(rgb(75, 85, 231), rgb(182, 97, 150));
               border: 2px solid @color-blue500;
               border-radius: 8px;
               padding: 18px;
@@ -2024,7 +2032,7 @@ export default class Pools extends Vue {
                     margin-top: 8px;
 
                     .shortcut-container {
-                      background: linear-gradient(rgb(75, 85, 231),rgb(182, 97, 150));
+                      background: linear-gradient(rgb(75, 85, 231), rgb(182, 97, 150));
                       border-radius: 8px;
                       padding: 2px;
                       margin-right: 8px;
@@ -2034,7 +2042,7 @@ export default class Pools extends Vue {
                       }
 
                       .shortcut-box {
-                        background: #2e1664 ;
+                        background: #2e1664;
                         border-radius: 8px;
                         padding: 8px;
 
@@ -2055,7 +2063,7 @@ export default class Pools extends Vue {
           .option-sort-collapse {
             position: absolute;
             top: 50px;
-            background:linear-gradient(rgba(75,85,231,0.65098), rgba(182,97,150,0.74902));
+            background: linear-gradient(rgba(75, 85, 231, 0.65098), rgba(182, 97, 150, 0.74902));
             background-origin: border-box;
             border: 2px solid rgba(255, 255, 255, 0.14);
             box-shadow: 18px 11px 14px rgba(0, 0, 0, 0.25);

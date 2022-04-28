@@ -27,7 +27,12 @@ export default {
         name: 'viewport',
         content: 'width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no'
       },
-      { hid: 'description', name: 'description', content: 'NeoNomad provides an all-in-one integrated ecosystem, including an exchange, integrated payment services, a Launchpad, DeFi products and an NFT marketplace to make decentralized finance accessible to all.' }
+      {
+        hid: 'description',
+        name: 'description',
+        content:
+          'NeoNomad provides an all-in-one integrated ecosystem, including an exchange, integrated payment services, a Launchpad, DeFi products and an NFT marketplace to make decentralized finance accessible to all.'
+      }
     ],
     link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }]
   },
@@ -75,39 +80,40 @@ export default {
   pwa: {
     meta: {
       title: 'NeoNomad Finance',
-      author: 'NeoNomad Finance',
+      author: 'NeoNomad Finance'
     },
     manifest: {
-      short_name: "NeoNomad",
-      name: "NeoNomad Finance",
-      description: "NeoNomad provides an all-in-one integrated ecosystem, including an exchange, integrated payment services, a Launchpad, DeFi products and an NFT marketplace to make decentralized finance accessible to all.",
-      start_url: "../",
-      display: "standalone",
+      short_name: 'NeoNomad',
+      name: 'NeoNomad Finance',
+      description:
+        'NeoNomad provides an all-in-one integrated ecosystem, including an exchange, integrated payment services, a Launchpad, DeFi products and an NFT marketplace to make decentralized finance accessible to all.',
+      start_url: '../',
+      display: 'standalone',
       icons: [
         {
-          src: "/webapp.png",
-          sizes: "64x64 32x32 24x24 16x16",
-          type: "image/png"
+          src: '/webapp.png',
+          sizes: '64x64 32x32 24x24 16x16',
+          type: 'image/png'
         },
         {
-          src: "/webapp.png",
-          sizes: "72x72",
-          type: "image/png"
+          src: '/webapp.png',
+          sizes: '72x72',
+          type: 'image/png'
         },
         {
-          src: "/webapp.png",
-          sizes: "152x152",
-          type: "image/png"
+          src: '/webapp.png',
+          sizes: '152x152',
+          type: 'image/png'
         },
         {
-          src: "/webapp.png",
-          type: "image/png",
-          sizes: "192x192"
+          src: '/webapp.png',
+          type: 'image/png',
+          sizes: '192x192'
         },
         {
-          src: "/webapp.png",
-          type: "image/png",
-          sizes: "512x512"
+          src: '/webapp.png',
+          type: 'image/png',
+          sizes: '512x512'
         }
       ],
       lang: 'en',
@@ -149,11 +155,11 @@ export default {
     '@nuxtjs/dayjs',
     '@nuxtjs/google-gtag',
     '@nuxtjs/pwa',
-    "hcaptcha-nuxt"
+    'hcaptcha-nuxt'
     // '@nuxtjs/sentry'
   ],
   hcaptcha: {
-      siteKey: '43e98bf3-dd25-49cb-9c22-bb1183306a7f'
+    siteKey: '43e98bf3-dd25-49cb-9c22-bb1183306a7f'
   },
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {},
@@ -179,12 +185,11 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
-
     extend(config, ctx) {
-        config.node = {
-            fs: "empty"
-        }
-      },
+      config.node = {
+        fs: 'empty'
+      }
+    },
     transpile: [/^ant-design-vue/],
 
     loaders: {
@@ -207,14 +212,13 @@ export default {
         ]
       ]
     },
-  build: {
-    extend(config, ctx) {
-        config.node = {
-            fs: "empty"
-        },
-
-      config.resolve.alias['@ant-design/icons/lib/dist$'] = path.resolve(__dirname, './src/utils/antd-icons.ts')
+    build: {
+      extend(config, ctx) {
+        ;(config.node = {
+          fs: 'empty'
+        }),
+          (config.resolve.alias['@ant-design/icons/lib/dist$'] = path.resolve(__dirname, './src/utils/antd-icons.ts'))
+      }
     }
-},
   }
 }

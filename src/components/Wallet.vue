@@ -1,61 +1,5 @@
 <template>
   <div class="wallet">
-    <!-- <div v-if="wallet.connected" class="tier-container fcs-container">
-      <div class="tier-profile">
-        <img class="tier-img" src="@/assets/background/tier-blur.png" />
-      </div>
-
-      <div
-        class="tier-info fcs-container icon-cursor"
-        @click="
-          () => {
-            this.showTierInfo = !this.showTierInfo
-          }
-        "
-      >
-        <span class="tier-id font-medium weight-semi spacing-small"
-          >Tier <span v-if="tierloaded">{{ wallet.tiers }}</span
-          ><span v-else>&mdash;</span></span
-        >
-        <img src="@/assets/icons/arrow-down-white.svg" />
-      </div>
-
-      <div
-        v-if="showTierInfo"
-        class="tier-info-menu"
-        v-click-outside="
-          () => {
-            this.showTierInfo = false
-          }
-        "
-      >
-        <div v-if="tierloaded" class="collapse-item text-center font-medium weight-semi icon-cursor">
-          <div class="tier-progress text-left">
-            <div class="tier-progress-label fcsb-container">
-              <span class="font-xsmall weight-bold">Tier {{ wallet.tiers }}</span>
-              <span class="font-xsmall weight-bold">Tier {{ wallet.tiers + 1 }}</span>
-            </div>
-            <Progress type="line" :stroke-width="14" :percent="Number(pctToNexttiers.toFixed(1))" :show-info="false" />
-            <div class="tier-progress-info-container">
-              <div
-                class="tier-progress-end"
-                :style="'margin-left: calc(' + Number(pctToNexttiers.toFixed(1)) + '% - 2px)'"
-              ></div>
-              <label
-                class="tier-progress-percent font-xsmall"
-                :style="'margin-left: calc(' + Number(pctToNexttiers.toFixed(1)) + '% - 2px)'"
-              >
-                {{ userTier }} sCRP
-              </label>
-            </div>
-          </div>
-        </div>
-        <div class="collapse-item text-center font-medium weight-semi icon-cursor">
-          <NuxtLink to="/staking/"> Stake NNI </NuxtLink>
-        </div>
-      </div>
-    </div> -->
-
     <div class="wallet-btn">
       <div
         class="btncontainer"
@@ -84,15 +28,6 @@
           {{ wallet.address.substr(wallet.address.length - 4, 4) }}
         </Button>
       </div>
-
-      <!-- <a v-if="wallet.connected" :href="this.sonarUrl" target="_blank" class="sonar-container">
-        <div class="btncontainer sonar connected" ghost>
-          <Button>
-            <img src="@/assets/icons/sonar-watch.svg" />
-          </Button>
-        </div>
-        <div class="sonar-dashboard">My dashboard</div>
-      </a> -->
 
       <Modal
         :title="!wallet.connected ? 'Connect to a wallet' : 'Your wallet'"
@@ -128,6 +63,7 @@
           <img :src="importIcon(`/wallets/${name.replace(' ', '-').toLowerCase()}.png`)" />
           <span>{{ name }}</span>
         </Button>
+        <p style="line-height: normal">New here? <a>Get started on NeoNomad</a></p>
       </div>
       <div v-else class="wallet-info">
         <p class="address font-medium">{{ wallet.address }}</p>
@@ -176,26 +112,12 @@ import { TokenAmount } from '@/utils/safe-math'
 import { TOKENS } from '@/utils/tokens'
 import {
   setAnchorProvider,
-  createFarmState,
-  fundToProgram,
-  setExtraReward,
-  createExtraReward,
-  createPool,
-  changePoolAmountMultipler,
-  changeTokenPerSecond,
-  changePoolPoint,
-  getFarmStateAddress,
   getFarmState,
   getExtraRewardConfigs,
   getAllPools,
   getPoolUserAccount,
-  estimateRewards,
   calculateTiers,
-  TIERS_XCRP,
-  stake,
-  unstake,
-  harvest
-} from '@/utils/crp-stake'
+  TIERS_XCRP} from '@/utils/crp-stake'
 const Vco = require('v-click-outside')
 const network = WalletAdapterNetwork.Devnet
 // declare const window: any

@@ -39,10 +39,10 @@ export default class Nav extends Vue {
     //whitelist: true, //working link
     //liquidity: false,
 
-    staking: true,
-    nomadpad: true,
+    staking: false,
+    nomadpad: false,
     swap: false, 
-    farms: true,
+    farms: false,
     pools: false
 
     // fusion: false,
