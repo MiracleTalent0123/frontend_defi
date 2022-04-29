@@ -18,209 +18,214 @@
 
     <div class="card">
       <div class="card-body">
-        <div class="staking-head fcsb-container">
-          <h3 class="title weight-bold">Staking</h3>
-          <div class="information">
-            <div class="tvl-info">
-              <p class="font-large weight-semi">TVL : ${{ TVL.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') }}</p>
-            </div>
+        <div class="staking-container">
+          <div class="staking-head fcsb-container">
+            <h3 class="title weight-bold">Staking</h3>
+            <div class="information">
+              <div class="tvl-info">
+                <p class="font-large weight-semi">TVL : ${{ TVL.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') }}</p>
+              </div>
 
-            <div class="action-btn-group">
-              <div class="reload-btn icon-cursor" :class="activeSpinning ? 'active' : ''" @click="reloadTimer">
-                <img class="reload-icon" src="@/assets/icons/reload.svg" />
+              <div class="action-btn-group">
+                <div class="reload-btn icon-cursor" :class="activeSpinning ? 'active' : ''" @click="reloadTimer">
+                  <img class="reload-icon" src="@/assets/icons/reload.svg" />
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="staking-content fcsb-container">
-          <div class="staking-body">
-            <h4 class="weight-bold">NNI Staking</h4>
-            <div class="staking-progress">
-              <div class="staking-progress-label fcsb-container">
-                <span class="font-xsmall weight-bold">NeoNomad {{ currentTiers }}</span>
-                <span v-if="currentTiers < 3" class="font-xsmall weight-bold">NeoNomad {{ nextTiers }}</span>
-              </div>
-              <Progress
-                type="line"
-                :stroke-width="14"
-                :percent="Number(pctToNexttiers.toFixed(1))"
-                :show-info="false"
-              />
-              <div class="staking-progress-info-container">
-                <div
-                  v-if="Number(pctToNexttiers.toFixed(1)) > 1"
-                  class="staking-progress-end"
-                  :style="'margin-left: calc(' + Number(pctToNexttiers.toFixed(1)) + '% - 2px)'"
-                ></div>
-                <label
-                  class="staking-progress-percent font-xsmall"
-                  :style="'margin-left: calc(' + Number(pctToNexttiers.toFixed(1)) + '% - 2px)'"
-                >
-                  {{ userTier }} NNI
-                </label>
-              </div>
-            </div>
-
-            <div class="staking-infos-group">
-              <div class="staking-info fcsb-container">
-                <div class="label font-medium weight-semi spacing-small">
-                  Estimated APY
-                  <Tooltip placement="bottomLeft">
-                    <template slot="title">
-                      <div>Potential Annual Percentage Yield based on a daily compounding</div>
-                    </template>
-                    <img class="tooltip-icon" src="@/assets/icons/info.svg" />
-                  </Tooltip>
+          <div class="staking-content fcsb-container">
+            <div class="staking-body">
+              <h4 class="weight-bold">NNI Staking</h4>
+              <div class="staking-progress">
+                <div class="staking-progress-label fcsb-container">
+                  <span class="font-xsmall weight-bold">NeoNomad {{ currentTiers }}</span>
+                  <span v-if="currentTiers < 3" class="font-xsmall weight-bold">NeoNomad {{ nextTiers }}</span>
                 </div>
-                <div class="value font-medium weight-bold">
-                  {{ Math.round(estimatedAPY * 2 * 100) / 100 }} %
-                  <img
-                    class="calc-icon icon-cursor"
-                    src="@/assets/icons/calculator.svg"
-                    @click="
-                      () => {
-                        this.baseModalShow = true
-                      }
-                    "
-                  />
-                </div>
-              </div>
-
-              <div class="staking-info fcsb-container">
-                <div class="label font-medium weight-semi spacing-small">
-                  Total Staked
-                  <Tooltip placement="bottomLeft">
-                    <template slot="title">
-                      <div>Total staked NNI token amount</div>
-                    </template>
-                    <img class="tooltip-icon" src="@/assets/icons/info.svg" />
-                  </Tooltip>
-                </div>
-                <div class="value font-medium weight-bold">{{ totalStaked }}</div>
-              </div>
-
-              <div class="staking-info fcsb-container">
-                <div class="label font-medium weight-semi spacing-small">
-                  Total Value
-                  <Tooltip placement="bottomLeft">
-                    <template slot="title">
-                      <div>Total Value staked (USD)</div>
-                    </template>
-                    <img class="tooltip-icon" src="@/assets/icons/info.svg" />
-                  </Tooltip>
-                </div>
-
-                <div class="value font-medium weight-bold">{{ totalStakedPrice }}</div>
-              </div>
-            </div>
-
-            <div class="staking-actions-group">
-              <div class="staking-action-item fcsb-container">
-                <div class="reward-pending">
-                  <label class="label font-medium">Reward Pending</label>
-                  <label class="value font-large weight-bold">{{ pendingRewardDynamic }}</label>
-                </div>
-                <div class="btn-container">
-                  <Button
-                    class="btn-primary weight-semi spacing-large"
-                    :disabled="!wallet.connected || pendingReward == 0"
-                    @click="harvestReward"
-                    >Harvest</Button
+                <Progress
+                  type="line"
+                  :stroke-width="14"
+                  :percent="Number(pctToNexttiers.toFixed(1))"
+                  :show-info="false"
+                />
+                <div class="staking-progress-info-container">
+                  <div
+                    v-if="Number(pctToNexttiers.toFixed(1)) > 1"
+                    class="staking-progress-end"
+                    :style="'margin-left: calc(' + Number(pctToNexttiers.toFixed(1)) + '% - 2px)'"
+                  ></div>
+                  <label
+                    class="staking-progress-percent font-xsmall"
+                    :style="'margin-left: calc(' + Number(pctToNexttiers.toFixed(1)) + '% - 2px)'"
                   >
+                    {{ userTier }} NNI
+                  </label>
                 </div>
               </div>
 
-              <div v-if="!wallet.connected" class="btn-container btn-large fcc-container">
-                <Button class="btn-transparent font-large weight-bold" @click="$accessor.wallet.openModal"
-                  >Connect Wallet</Button
-                >
+              <div class="staking-infos-group">
+                <div class="staking-info fcsb-container">
+                  <div class="label font-medium weight-semi spacing-small">
+                    Estimated APY
+                    <Tooltip placement="bottomLeft">
+                      <template slot="title">
+                        <div>Potential Annual Percentage Yield based on a daily compounding</div>
+                      </template>
+                      <img class="tooltip-icon" src="@/assets/icons/info.svg" />
+                    </Tooltip>
+                  </div>
+                  <div class="value font-medium weight-bold">
+                    {{ Math.round(estimatedAPY * 2) / 100 }} %
+                    <img
+                      class="calc-icon icon-cursor"
+                      src="@/assets/icons/calculator.svg"
+                      @click="
+                        () => {
+                          this.baseModalShow = true
+                        }
+                      "
+                    />
+                  </div>
+                </div>
+
+                <div class="staking-info fcsb-container">
+                  <div class="label font-medium weight-semi spacing-small">
+                    Total Staked
+                    <Tooltip placement="bottomLeft">
+                      <template slot="title">
+                        <div>Total staked NNI token amount</div>
+                      </template>
+                      <img class="tooltip-icon" src="@/assets/icons/info.svg" />
+                    </Tooltip>
+                  </div>
+                  <div class="value font-medium weight-bold">{{ totalStaked }}</div>
+                </div>
+
+                <div class="staking-info fcsb-container">
+                  <div class="label font-medium weight-semi spacing-small">
+                    Total Value
+                    <Tooltip placement="bottomLeft">
+                      <template slot="title">
+                        <div>Total Value staked (USD)</div>
+                      </template>
+                      <img class="tooltip-icon" src="@/assets/icons/info.svg" />
+                    </Tooltip>
+                  </div>
+
+                  <div class="value font-medium weight-bold">{{ totalStakedPrice }}</div>
+                </div>
               </div>
 
-              <div v-else>
-                <div v-if="userStaked > 0" class="staking-action-item fcsb-container">
+              <div class="staking-actions-group">
+                <div class="staking-action-item fcsb-container">
                   <div class="reward-pending">
-                    <label class="label font-medium">NNI Staked</label>
-                    <label class="value font-large weight-bold">{{ userStaked }}</label>
+                    <label class="label font-medium">Reward Pending</label>
+                    <label class="value font-large weight-bold">{{ pendingRewardDynamic }}</label>
                   </div>
-                  <div class="stake-btn-group fcc-container">
-                    <div class="btn-container">
-                      <Button
-                        class="btn-primary weight-semi spacing-large"
-                        :disabled="!wallet.connected || userStaked == 0 || canUnstake == false"
-                        @click="unstakeToken"
-                        >Unstake</Button
-                      >
-                    </div>
-                    <div class="btn-container">
-                      <Button
-                        class="btn-transparent weight-semi spacing-large"
-                        id="stake"
-                        @click="
-                          () => {
-                            this.stakeModalShow = true
-                          }
-                        "
-                        >Stake</Button
-                      >
-                    </div>
+                  <div class="btn-container">
+                    <Button
+                      class="btn-primary weight-semi spacing-large"
+                      :disabled="!wallet.connected || pendingReward == 0"
+                      @click="harvestReward"
+                      >Harvest</Button
+                    >
                   </div>
                 </div>
 
-                <div v-else class="btn-container btn-large fcc-container">
-                  <Button
-                    class="btn-transparent font-large weight-bold"
-                    id="stake"
-                    @click="
-                      () => {
-                        this.stakeModalShow = true
-                      }
-                    "
-                    >Stake</Button
+                <div v-if="!wallet.connected" class="btn-container btn-large fcc-container">
+                  <Button class="btn-transparent font-large weight-bold" @click="$accessor.wallet.openModal"
+                    >Connect Wallet</Button
                   >
                 </div>
-              </div>
-            </div>
 
-            <div class="staking-footer">
-              <div class="lock-tokens fcsb-container">
-                <label class="label font-small weight-semi spacing-large">
-                  {{ endOfLock ? 'End of lock' : 'Lock tokens for' }}
-                </label>
-                <label class="value font-small weight-semi spacing-large">
-                  {{ endOfLock ? endOfLock : '0 Day(s)' }}
-                </label>
-              </div>
-              <div v-if="!endOfLock" class="get-crp fcc-container">
-                <NuxtLink to="/swap/" class="get-crp">
-                  <label class="font-medium weight-semi get-nni">Get NNI</label>
-                  <img class="union-icon" src="@/assets/icons/union.svg" />
-                </NuxtLink>
-              </div>
-            </div>
-          </div>
+                <div v-else>
+                  <div v-if="userStaked > 0" class="staking-action-item fcsb-container">
+                    <div class="reward-pending">
+                      <label class="label font-medium">NNI Staked</label>
+                      <label class="value font-large weight-bold">{{ userStaked }}</label>
+                    </div>
+                    <div class="stake-btn-group fcc-container">
+                      <div class="btn-container">
+                        <Button
+                          class="btn-primary weight-semi spacing-large"
+                          :disabled="!wallet.connected || userStaked == 0 || canUnstake == false"
+                          @click="unstakeToken"
+                          >Unstake</Button
+                        >
+                      </div>
+                      <div class="btn-container">
+                        <Button
+                          class="btn-transparent weight-semi spacing-large"
+                          id="stake"
+                          @click="
+                            () => {
+                              this.stakeModalShow = true
+                            }
+                          "
+                          >Stake</Button
+                        >
+                      </div>
+                    </div>
+                  </div>
 
-          <div class="staking-tiers">
-            <Carousel ref="tierCarousel" :before-change="getCurrentTier" arrows>
-              <div slot="prevArrow" class="custom-slick-arrow prev-arrow">
-                <Icon type="left" />
-              </div>
-              <div slot="nextArrow" class="custom-slick-arrow next-arrow">
-                <Icon type="right" />
-              </div>
-
-              <div class="staking-tiers2">
-                <div class="staking-tier-preview2 fcc-container">
-                  <div class="tier-text">
-                    <span class="font-large"></span>
-                    <br />
-                    <span class="font-large weight-bold text-upper"></span>
+                  <div v-else class="btn-container btn-large fcc-container">
+                    <Button
+                      class="btn-transparent font-large weight-bold"
+                      id="stake"
+                      @click="
+                        () => {
+                          this.stakeModalShow = true
+                        }
+                      "
+                      >Stake</Button
+                    >
                   </div>
                 </div>
-                <div class="Nomad-container">
-                  <label class="font-large weight-bold">The Gypsy</label>
-                  <label class="font-large weight-bold">200 NNI</label>
-                  <!-- <div class="btn-container">
+              </div>
+
+              <div class="staking-footer">
+                <div class="lock-tokens fcsb-container">
+                  <label class="label font-small weight-semi spacing-large">
+                    {{ endOfLock ? 'End of lock' : 'Lock tokens for' }}
+                  </label>
+                  <label class="value font-small weight-semi spacing-large">
+                    {{ endOfLock ? endOfLock : '0 Day(s)' }}
+                  </label>
+                </div>
+                <div v-if="!endOfLock" class="get-crp fcc-container">
+                  <NuxtLink to="/swap/" class="get-crp">
+                    <label class="font-medium weight-semi get-nni">Get NNI</label>
+                    <img class="union-icon" src="@/assets/icons/union.svg" />
+                  </NuxtLink>
+                </div>
+              </div>
+            </div>
+
+            <div class="staking-tiers">
+              <Carousel ref="tierCarousel" :before-change="getCurrentTier" arrows>
+                <div slot="prevArrow" class="custom-slick-arrow prev-arrow">
+                  <Icon type="left" />
+                </div>
+                <div slot="nextArrow" class="custom-slick-arrow next-arrow">
+                  <Icon type="right" />
+                </div>
+
+                <div
+                  v-for="(tier, index) in tiers"
+                  :key="index"
+                  :class="[`staking-tiers-item staking-tiers-item-${index + 1}`]"
+                >
+                  <div class="staking-tier-preview fcc-container">
+                    <div class="tier-text">
+                      <span class="font-large"></span>
+                      <br />
+                      <span class="font-large weight-bold text-upper"></span>
+                    </div>
+                  </div>
+                  <div class="Nomad-container">
+                    <label class="font-large weight-bold">{{ tier.name }}</label>
+                    <label class="font-large weight-bold">{{ tier.price.toLocaleString() }} NNI</label>
+                    <!-- <div class="btn-container">
                     <a
                       class="btn-primary font-medium weight-semi fcc-container"
                       href="#staking-tiers-details"
@@ -228,74 +233,13 @@
                       >About Tiers</a
                     >
                   </div> -->
-                </div>
-              </div>
-              <div class="staking-tiers3">
-                <div class="staking-tier-preview3 fcc-container">
-                  <div class="tier-text">
-                    <span class="font-large"></span>
-                    <br />
-                    <span class="font-large weight-bold text-upper"></span>
                   </div>
                 </div>
-                <div class="Nomad-container">
-                  <label class="font-large weight-bold">The Wanderer</label>
-                  <label class="font-large weight-bold">2000 NNI</label>
-                  <!-- <div class="btn-container">
-                    <a
-                      class="btn-primary font-medium weight-semi fcc-container"
-                      href="#staking-tiers-details"
-                      @click="setTierTabs"
-                      >About Tiers</a
-                    >
-                  </div> -->
-                </div>
-              </div>
-              <div class="staking-tiers4">
-                <div class="staking-tier-preview4 fcc-container">
-                  <div class="tier-text">
-                    <span class="font-large"></span>
-                    <br />
-                    <span class="font-large weight-bold text-upper"></span>
-                  </div>
-                </div>
-                <div class="Nomad-container">
-                  <label class="font-large weight-bold">The Traveler</label>
-                  <label class="font-large weight-bold">10,000 NNI</label>
-                </div>
-              </div>
-              <div class="staking-tiers5">
-                <div class="staking-tier-preview5 fcc-container">
-                  <div class="tier-text">
-                    <span class="font-large"></span>
-                    <br />
-                    <span class="font-large weight-bold text-upper"></span>
-                  </div>
-                </div>
-                <div class="Nomad-container">
-                  <label class="font-large weight-bold">The Nomad</label>
-                  <label class="font-large weight-bold">20,000 NNI</label>
-                </div>
-                <!-- </div>
-              <div class="staking-tier-item">
-                <div class="staking-tier-preview fcc-container">
-                  <div class="tier-text">
-                    <span class="font-large">Tier 5</span>
-                    <br />
-                    <span class="font-large weight-bold text-upper">Soon</span>
-                  </div>
-                </div>
-                <div class="fcsb-container">
-                  <label class="font-large weight-bold">Tier 5</label>
-                  <label class="font-large weight-bold">100,000 NNI</label>
-                  
-                </div> -->
-              </div>
-            </Carousel>
+              </Carousel>
+            </div>
           </div>
-        </div>
 
-        <!-- <div class="staking-tiers-details" id="staking-tiers-details">
+          <!-- <div class="staking-tiers-details" id="staking-tiers-details">
           <span class="font-large weight-bold">About Tiers</span>
           <div class="staking-tiers-features">
             <Tabs v-model="activeTab">
@@ -422,6 +366,7 @@
             </Tabs>
           </div>
         </div> -->
+        </div>
       </div>
     </div>
   </div>
@@ -515,7 +460,13 @@ export default Vue.extend({
       currentTiers: 0 as number,
       nextTiers: 1 as number,
       selectedTier: 0 as number,
-      activeTab: '1' as string
+      activeTab: '1' as string,
+      tiers: [
+        { name: 'The Gypsy', price: 200 },
+        { name: 'The Wanderer', price: 2000 },
+        { name: 'The Traveler', price: 10000 },
+        { name: 'The Nomad', price: 20000 }
+      ]
     }
   },
   head: {
@@ -986,6 +937,17 @@ export default Vue.extend({
   }
 
   // class styles
+  // .staking-container {
+  //   background: linear-gradient(#ac72d6e1, #4b55e7c2);
+  //   border-radius: 18px;
+  //   box-shadow: 0 0 5px #2e1664;
+  //   padding: 20px 35px;
+  //   margin-top: 20px;
+
+  //   @media @max-sl-mobile {
+  //     padding: 15px;
+  //   }
+  // }
 
   &.container {
     margin-top: 38px;
@@ -1058,15 +1020,18 @@ export default Vue.extend({
         }
 
         .staking-content {
-          max-width: 870px;
-          min-width: 335px;
+          max-width: 970px;
           width: 100%;
-          margin: auto !important;
-          background: linear-gradient(#4b55e7a6, #b66196bf);
-          border: 3px solid #3e0775;
-          padding: 18px;
-          box-shadow: 3px 4px 8px 2px #06060682;
+          margin: 20px auto !important;
+          // background: linear-gradient(#ac72d6e1, #4b55e7c2);
           border-radius: 18px;
+          // box-shadow: 0 0 5px #2e1664;
+          padding: 30px;
+          align-items: flex-start !important;
+
+          @media @max-sl-mobile {
+            padding: 15px;
+          }
 
           @media @max-sl-mobile {
             display: inline-block !important;
@@ -1075,14 +1040,8 @@ export default Vue.extend({
           .staking-tiers {
             max-width: 370px;
             height: 550px;
-            margin: auto;
+            margin: 0 auto;
             width: 100%;
-            // background: url('@/assets/background/The_Wanderer.jpg');
-            // background-size: cover;
-            // border: 4px solid #3e0775;
-            // border-radius: 18px;
-            padding: 24px !important;
-            // box-shadow: 3px 4px 8px 2px #070707ad;
 
             @media @max-md-tablet {
               max-width: 320px;
@@ -1113,6 +1072,32 @@ export default Vue.extend({
           .staking-body {
             width: calc(100% - 398px);
             margin-right: 28px;
+            padding: 25px;
+            position: relative;
+            z-index: 0;
+            border-radius: 18px;
+            background: radial-gradient(#ac72d6e1 0%, #4b55e7c2 100%, #ac72d6e1);
+            box-shadow: 0 0 10px #2e1664;
+
+            &::after {
+              content: '';
+            }
+
+            &::before {
+              content: '';
+              position: absolute;
+              z-index: -1;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background: @gradient-color-icon;
+              padding: 2px;
+              border-radius: 18px;
+              -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+              -webkit-mask-composite: xor;
+              mask-composite: exclude;
+            }
 
             @media @max-md-tablet {
               width: calc(100% - 348px);
@@ -1122,6 +1107,7 @@ export default Vue.extend({
               width: 100%;
               margin-right: 0;
               margin-bottom: 28px;
+              padding: 15px;
             }
 
             .staking-progress {
@@ -1412,135 +1398,48 @@ export default Vue.extend({
 </style>
 
 <style lang="less">
-.staking-tiers2 {
-  max-width: 370px;
-  height: 500px;
-  margin: auto;
-  width: 100%;
+.staking-tiers-item-1 {
   background: url('@/assets/background/The_Gypsy.jpg');
-  background-size: cover;
-  border: 4px solid #3e0775;
-  border-radius: 18px;
-  padding: 24px !important;
-  // box-shadow: 3px 4px 8px 2px #070707ad;
-
-  @media @max-md-tablet {
-    max-width: 320px;
-  }
-
-  @media @max-sm-mobile {
-    max-width: 290px;
-  }
-
-  .staking-tier-item2 {
-    padding: 0 4px;
-
-    .staking-tier-preview2 {
-      height: 277px;
-      margin-bottom: 28px;
-    }
-
-    .btn-container {
-      width: 120px;
-
-      .btn-primary {
-        background: @color-blue800;
-      }
-    }
-  }
 }
-</style>
-<style lang="less">
-.staking-tiers3 {
-  max-width: 370px;
-  height: 500px;
-  margin: auto;
-  width: 100%;
+.staking-tiers-item-2 {
   background: url('@/assets/background/The_Wanderer.jpg');
-  background-size: cover;
-  border: 4px solid #3e0775;
-  border-radius: 18px;
-  padding: 24px !important;
-  // box-shadow: 3px 4px 8px 2px #070707ad;
-
-  @media @max-md-tablet {
-    max-width: 320px;
-  }
-
-  @media @max-sm-mobile {
-    max-width: 290px;
-  }
-
-  .staking-tier-item3 {
-    padding: 0 4px;
-
-    .staking-tier-preview3 {
-      height: 277px;
-      margin-bottom: 28px;
-    }
-
-    .btn-container {
-      width: 120px;
-
-      .btn-primary {
-        background: @color-blue800;
-      }
-    }
-  }
 }
-</style>
-<style lang="less">
-.staking-tiers4 {
-  max-width: 370px;
-  height: 500px;
-  margin: auto;
-  width: 100%;
+.staking-tiers-item-3 {
   background: url('@/assets/background/The_Traveller.jpg');
-  background-size: cover;
-  border: 4px solid #3e0775;
-  border-radius: 18px;
-  padding: 24px !important;
-  // box-shadow: 3px 4px 8px 2px #070707ad;
-
-  @media @max-md-tablet {
-    max-width: 320px;
-  }
-
-  @media @max-sm-mobile {
-    max-width: 290px;
-  }
-
-  .staking-tier-item4 {
-    padding: 0 4px;
-
-    .staking-tier-preview4 {
-      height: 277px;
-      margin-bottom: 28px;
-    }
-
-    .btn-container {
-      width: 120px;
-
-      .btn-primary {
-        background: @color-blue800;
-      }
-    }
-  }
 }
-</style>
-
-<style lang="less">
-.staking-tiers5 {
+.staking-tiers-item-4 {
+  background: url('@/assets/background/Mystery.png');
+}
+.staking-tiers-item {
   max-width: 370px;
   height: 500px;
   margin: auto;
   width: 100%;
-  background: url('@/assets/background/Mystery_Avatar.png');
   background-size: cover;
-  border: 4px solid #3e0775;
-  border-radius: 18px;
   padding: 24px !important;
-  // box-shadow: 3px 4px 8px 2px #070707ad;
+  position: relative;
+  z-index: 0;
+  border-radius: 18px;
+
+  &::after {
+    content: '';
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: @gradient-color-icon;
+    padding: 2px;
+    border-radius: 18px;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
 
   @media @max-md-tablet {
     max-width: 320px;
@@ -1550,10 +1449,10 @@ export default Vue.extend({
     max-width: 290px;
   }
 
-  .staking-tier-item5 {
+  .staking-tier-item {
     padding: 0 4px;
 
-    .staking-tier-preview5 {
+    .staking-tier-preview {
       height: 277px;
       margin-bottom: 28px;
     }
