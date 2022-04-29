@@ -661,27 +661,6 @@ export default Vue.extend({
 
       let responseData: any = []
       let tvl = 0
-      // try {
-      //   responseData = await fetch('https://api.cropper.finance/cmc/').then((res) => res.json())
-
-      //   Object.keys(responseData).forEach(function (key) {
-      //     if ((responseData as any)[key as any].tvl * 1 < 2000000) {
-      //       tvl = tvl * 1 + (responseData as any)[key as any].tvl * 1
-      //     }
-      //   })
-      // } catch {
-      //   // dummy data
-      // } finally {
-      // }
-
-      // try {
-      //   responseData = await fetch('https://api.cropper.finance/staking/').then((res) => res.json())
-      //   tvl = tvl * 1 + (responseData as any).value * 1
-      // } catch {
-      //   // dummy data
-      // } finally {
-      // }
-
       this.TVL = Math.round(tvl)
 
       window.localStorage.TVL_last_updated = new Date().getTime()
@@ -1979,9 +1958,9 @@ export default Vue.extend({
     display: inline-block;
     position: relative;
     z-index: 0;
-    box-shadow: 0 0 5px #2e1664;
     border-radius: 18px;
-    background: linear-gradient(#ac72d6e1, #4b55e7c2);
+    box-shadow: 0 0 5px #240841, inset 0 0 30px #350863c5;
+    background: radial-gradient(#ac72d6e1 0%, #4b55e79f 100%, #ac72d6e1);
 
     .card-body {
       background: transparent;

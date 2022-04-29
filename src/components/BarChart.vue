@@ -1,15 +1,17 @@
 <template>
-  <Area
-    :chart-options="chartOptions"
-    :chart-data="chartData"
-    :chart-id="chartId"
-    :dataset-id-key="datasetIdKey"
-    :plugins="plugins"
-    :css-classes="cssClasses"
-    :styles="styles"
-    :width="width"
-    :height="height"
-  />
+  <div class="chart-container">
+    <Area
+      :chart-options="chartOptions"
+      :chart-data="chartData"
+      :chart-id="chartId"
+      :dataset-id-key="datasetIdKey"
+      :plugins="plugins"
+      :css-classes="cssClasses"
+      :styles="styles"
+      :width="width"
+      :height="height"
+    />
+  </div>
 </template>
 
 <script>
@@ -27,11 +29,11 @@ export default {
         labels: this.labels,
         datasets: [
           {
-            borderColor: '#3548C5',
+            borderColor: '#fff',
             pointBackgroundColor: 'white',
             pointBorderColor: '#3e0775',
             borderWidth: 1,
-            lineTension: 0.2,
+            lineTension: 0.3,
             backgroundColor: 'rgba(255, 99, 132, 0.2)',
             data: this.data
           }
@@ -106,3 +108,11 @@ export default {
   }
 }
 </script>
+
+<style lang="less" scoped>
+.chart-container {
+  margin-top: 20px;
+  background: #26276775;
+  border-radius: 15px;
+}
+</style>

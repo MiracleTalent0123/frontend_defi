@@ -40,10 +40,7 @@
             </div>
             <div class="read-more">
               <div class="btn-container">
-                <a
-                  href="https://www.neonomad.finance/"
-                  target="_blank"
-                  class="btn-outline font-body-medium weight-semi"
+                <a href="https://www.neonomad.finance/" target="_blank" class="btn-outline font-body-medium weight-semi"
                   >Documentation</a
                 >
               </div>
@@ -365,7 +362,7 @@ const { TabPane } = Tabs
   },
   layout: 'home',
   async asyncData({ redirect }) {
-     redirect('/swap/')
+    redirect('/swap/')
   }
 })
 export default class Landing extends Vue {

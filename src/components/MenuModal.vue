@@ -48,11 +48,11 @@ Vue.use(Modal)
 })
 export default class MenuModal extends Vue {
   navs = {
-    //staking: true,
-    // nomadpad: false,
+    staking: false,
+    nomadpad: false,
     swap: false,
     pools: false,
-    // farms: false
+    farms: false
   }
   banURL = 'fertilizer'
 

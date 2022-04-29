@@ -11,7 +11,7 @@
   >
     <img class="modal-close" src="@/assets/icons/close-circle.svg" @click="$emit('onCancel')" />
 
-    <div class="create-pool-head fcsb-container">
+    <!-- <div class="create-pool-head fcsb-container">
       <div class="btn-outline">
         <a
           href="https://docs.cropper.finance/cropperfinance/cropperfinance-platform-1/builder-tutorial/create-a-permissionless-pool"
@@ -25,7 +25,7 @@
           <Button class="link-btn font-small weight-semi">Get support </Button>
         </a>
       </div>
-    </div>
+    </div> -->
 
     <div class="create-pool">
       <CoinSelect
@@ -91,7 +91,7 @@
                     class="font-medium"
                     placeholder="Eg. 3iCYi5bQxXN5X4omCxME1jj9D91vNpYYqzbiSr9u7ccG"
                   />
-                  <div class="detailed-guide font-small">
+                  <!-- <div class="detailed-guide font-small">
                     <u>Note:</u> This tool is for advanced users. Before attempting to create a new liquidity pool, we
                     suggest going through this
                     <a
@@ -100,7 +100,7 @@
                     >
                       detailed guide.</a
                     >
-                  </div>
+                  </div> -->
                 </div>
               </Col>
               <div class="btn-container">
@@ -215,7 +215,7 @@
                   </div>
                 </div>
 
-                <div class="inner-content">
+                <!-- <div class="inner-content">
                   <div class="detailed-guide font-small">
                     <u>Note:</u> This tool is for advanced users. Before attempting to create a new liquidity pool, we
                     suggest going through this
@@ -226,7 +226,7 @@
                       detailed guide.</a
                     >
                   </div>
-                </div>
+                </div> -->
 
                 <div class="inner-content">
                   <div v-if="!wallet.connected" class="btn-container">
@@ -1032,7 +1032,7 @@ export default class CreatePool extends Vue {
   &:hover {
     background: @gradient-color02;
   }
-  
+
   .link-btn {
     height: 100%;
     background: @color-blue700;

@@ -11,7 +11,7 @@
   >
     <img class="modal-close" src="@/assets/icons/close-circle.svg" @click="$emit('onCancel')" />
 
-    <div class="create-farm-head fcsb-container">
+    <!-- <div class="create-farm-head fcsb-container">
       <div class="btn-outline">
         <a
           href="https://docs.cropper.finance/cropperfinance/cropperfinance-platform-1/builder-tutorial/create-a-permissionless-farm"
@@ -25,7 +25,7 @@
           <Button class="link-btn font-small weight-semi">Get support </Button>
         </a>
       </div>
-    </div>
+    </div> -->
 
     <div class="create-farm">
       <CoinSelect
@@ -127,15 +127,15 @@
                     </div>
                     <Radio :value="2">Create a new AMM ID</Radio>
                     <div class="create-amm" v-if="ammType != 1">
-                      <NuxtLink to="/pools/create-pool" class="link-pool font-small">
+                      <!-- <NuxtLink to="/pools/create-pool" class="link-pool font-small">
                         https://cropper.finance/pools/create-pool/
-                      </NuxtLink>
+                      </NuxtLink> -->
                       <div class="note-reminder font-medium">
                         <em><u>Note:</u> Only USDC, USDT, SOL and CRP pairs will be eligible to farm creation.</em>
                       </div>
                     </div>
                   </RadioGroup>
-                  <div class="info-guide font-small" v-if="ammType === 1">
+                  <!-- <div class="info-guide font-small" v-if="ammType === 1">
                     <img src="@/assets/icons/info.svg" />
                     <em>
                       This tool is for advanced users. Before attempting to create a new farm, we suggest going through
@@ -147,7 +147,7 @@
                         <u>detailed guide.</u></a
                       ></em
                     >
-                  </div>
+                  </div> -->
                 </div>
               </Col>
               <Col v-if="ammType === 1" :span="24" class="step-item">
@@ -1650,11 +1650,11 @@ export default class CreateFarm extends Vue {
   &:last-child {
     margin-right: 0;
   }
-  
+
   &:hover {
     background: @gradient-color02;
   }
-  
+
   .link-btn {
     height: 100%;
     background: @color-blue700;

@@ -1657,9 +1657,9 @@ export default class Pools extends Vue {
 }
 
 .pools-container {
-  background: linear-gradient(#ac72d6e1, #4b55e7c2);
+  box-shadow: 0 0 5px #240841, inset 0 0 30px #350863c5;
+  background: radial-gradient(#ac72d6e1 0%, #4b55e79f 100%, #ac72d6e1);
   border-radius: 18px;
-  box-shadow: 0 0 5px #2e1664;
   padding: 20px 35px;
   margin-top: 20px;
 

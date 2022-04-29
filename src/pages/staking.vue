@@ -1023,9 +1023,7 @@ export default Vue.extend({
           max-width: 970px;
           width: 100%;
           margin: 20px auto !important;
-          // background: linear-gradient(#ac72d6e1, #4b55e7c2);
           border-radius: 18px;
-          // box-shadow: 0 0 5px #2e1664;
           padding: 30px;
           align-items: flex-start !important;
 
@@ -1076,8 +1074,8 @@ export default Vue.extend({
             position: relative;
             z-index: 0;
             border-radius: 18px;
-            background: radial-gradient(#ac72d6e1 0%, #4b55e7c2 100%, #ac72d6e1);
-            box-shadow: 0 0 10px #2e1664;
+            box-shadow: 0 0 5px #240841, inset 0 0 30px #350863c5;
+            background: radial-gradient(#ac72d6e1 0%, #4b55e79f 100%, #ac72d6e1);
 
             &::after {
               content: '';
