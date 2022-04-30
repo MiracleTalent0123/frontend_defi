@@ -35,6 +35,55 @@
           </div>
 
           <div class="staking-content fcsb-container">
+            <div class="staking-tiers">
+              <Carousel
+                ref="tierCarousel"
+                autoPlay
+                :before-change="getCurrentTier"
+                :slidesToShow="3"
+                :centerMode="true"
+                :centerPadding="'0'"
+                :slidesToScroll="1"
+                arrows
+              >
+                <div slot="prevArrow" class="custom-slick-arrow prev-arrow">
+                  <Icon type="left" />
+                </div>
+                <div slot="nextArrow" class="custom-slick-arrow next-arrow">
+                  <Icon type="right" />
+                </div>
+
+                <div v-for="(tier, index) in tiers" :key="index">
+                  <div :class="[index + 1 == selectedTier ? 'activeSlide' : 'slide']">
+                    <div class="slideWrapper">
+                      <div :class="[`staking-tiers-item staking-tiers-item-${index + 1}`]">
+                        <div class="staking-tier-preview fcc-container">
+                          <div class="tier-text">
+                            <span class="font-large"></span>
+                            <br />
+                            <span class="font-large weight-bold text-upper"></span>
+                          </div>
+                        </div>
+                        <div class="Nomad-container">
+                          <label class="font-large weight-bold">{{ tier.name }}</label>
+                          <!-- <div class="btn-container">
+                      <a
+                        class="btn-primary font-medium weight-semi fcc-container"
+                        href="#staking-tiers-details"
+                        @click="setTierTabs"
+                        >About Tiers</a
+                      >
+                    </div> -->
+                        </div>
+                        <div class="staking-tier-desc">
+                          <label class="font-large weight-bold">{{ tier.price.toLocaleString() }} NNI</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Carousel>
+            </div>
             <div class="staking-body">
               <h4 class="weight-bold">NNI Staking</h4>
               <div class="staking-progress">
@@ -199,43 +248,6 @@
                   </NuxtLink>
                 </div>
               </div>
-            </div>
-
-            <div class="staking-tiers">
-              <Carousel ref="tierCarousel" :before-change="getCurrentTier" arrows>
-                <div slot="prevArrow" class="custom-slick-arrow prev-arrow">
-                  <Icon type="left" />
-                </div>
-                <div slot="nextArrow" class="custom-slick-arrow next-arrow">
-                  <Icon type="right" />
-                </div>
-
-                <div
-                  v-for="(tier, index) in tiers"
-                  :key="index"
-                  :class="[`staking-tiers-item staking-tiers-item-${index + 1}`]"
-                >
-                  <div class="staking-tier-preview fcc-container">
-                    <div class="tier-text">
-                      <span class="font-large"></span>
-                      <br />
-                      <span class="font-large weight-bold text-upper"></span>
-                    </div>
-                  </div>
-                  <div class="Nomad-container">
-                    <label class="font-large weight-bold">{{ tier.name }}</label>
-                    <label class="font-large weight-bold">{{ tier.price.toLocaleString() }} NNI</label>
-                    <!-- <div class="btn-container">
-                    <a
-                      class="btn-primary font-medium weight-semi fcc-container"
-                      href="#staking-tiers-details"
-                      @click="setTierTabs"
-                      >About Tiers</a
-                    >
-                  </div> -->
-                  </div>
-                </div>
-              </Carousel>
             </div>
           </div>
 
@@ -525,6 +537,9 @@ export default Vue.extend({
     this.setTimer()
   },
   methods: {
+    onCarouselChange(a: any, b: any) {
+      console.log(a, b)
+    },
     async getTvl() {
       let cur_date = new Date().getTime()
       if (window.localStorage.TVL_last_updated) {
@@ -1024,29 +1039,29 @@ export default Vue.extend({
           width: 100%;
           margin: 20px auto !important;
           border-radius: 18px;
-          padding: 30px;
-          align-items: flex-start !important;
+          padding: 30px 0;
+          align-items: center !important;
 
           @media @max-sl-mobile {
-            padding: 15px;
-          }
-
-          @media @max-sl-mobile {
+            padding: 0;
             display: inline-block !important;
+            max-width: unset;
           }
 
           .staking-tiers {
-            max-width: 370px;
-            height: 550px;
-            margin: 0 auto;
+            max-width: 450px;
+            height: 450px;
+            margin: 0 28px 0 0;
             width: 100%;
 
             @media @max-md-tablet {
-              max-width: 320px;
+              max-width: 450px;
+              margin: 0 auto 28px;
             }
 
             @media @max-sm-mobile {
               max-width: 290px;
+              height: 350px;
             }
 
             .staking-tier-item {
@@ -1068,8 +1083,7 @@ export default Vue.extend({
           }
 
           .staking-body {
-            width: calc(100% - 398px);
-            margin-right: 28px;
+            width: calc(100% - 450px);
             padding: 25px;
             position: relative;
             z-index: 0;
@@ -1083,8 +1097,6 @@ export default Vue.extend({
 
             @media @max-sl-mobile {
               width: 100%;
-              margin-right: 0;
-              margin-bottom: 28px;
               padding: 15px;
             }
 
@@ -1291,7 +1303,7 @@ export default Vue.extend({
 
     .slick-dots {
       position: relative;
-      margin-top: -70px;
+      margin-top: -40px;
       bottom: 0;
       height: auto;
 
@@ -1389,8 +1401,7 @@ export default Vue.extend({
   background: url('@/assets/background/Mystery.png');
 }
 .staking-tiers-item {
-  max-width: 370px;
-  height: 500px;
+  height: 450px;
   margin: auto;
   width: 100%;
   background-size: cover;
@@ -1398,6 +1409,10 @@ export default Vue.extend({
   position: relative;
   z-index: 0;
   border-radius: 18px;
+
+  @media @max-sl-mobile {
+    height: 350px;
+  }
 
   &::after {
     content: '';
@@ -1443,5 +1458,33 @@ export default Vue.extend({
       }
     }
   }
+}
+
+.staking-tier-desc {
+  position: absolute;
+  bottom: 45px;
+  width: 100%;
+  text-align: center;
+  left: 0;
+}
+
+.slideWrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.slide {
+  transform: scale(1, 0.8);
+  opacity: 0.8;
+  transition: 0.5s ease-in-out;
+}
+
+.activeSlide {
+  transition: transform 0.5s;
+  position: relative;
+  z-index: 1000;
+  width: 200% !important;
+  transform: translateX(-25%);
+  height: 220% !important;
 }
 </style>
