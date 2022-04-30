@@ -1074,28 +1074,8 @@ export default Vue.extend({
             position: relative;
             z-index: 0;
             border-radius: 18px;
-            box-shadow: 0 0 5px #240841, inset 0 0 30px #350863c5;
-            background: radial-gradient(#ac72d6e1 0%, #4b55e79f 100%, #ac72d6e1);
-
-            &::after {
-              content: '';
-            }
-
-            &::before {
-              content: '';
-              position: absolute;
-              z-index: -1;
-              top: 0;
-              left: 0;
-              right: 0;
-              bottom: 0;
-              background: @gradient-color-icon;
-              padding: 2px;
-              border-radius: 18px;
-              -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-              -webkit-mask-composite: xor;
-              mask-composite: exclude;
-            }
+            box-shadow: inset 0 0 28px #2d0b50e1;
+            background: rgba(129, 116, 245, 0.5);
 
             @media @max-md-tablet {
               width: calc(100% - 348px);

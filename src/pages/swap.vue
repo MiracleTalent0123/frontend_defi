@@ -1959,8 +1959,8 @@ export default Vue.extend({
     position: relative;
     z-index: 0;
     border-radius: 18px;
-    box-shadow: 0 0 5px #240841, inset 0 0 30px #350863c5;
-    background: radial-gradient(#ac72d6e1 0%, #4b55e79f 100%, #ac72d6e1);
+    box-shadow: inset 0 0 28px #2d0b50e1;
+    background: rgba(129, 116, 245, 0.5);
 
     .card-body {
       background: transparent;
