@@ -124,7 +124,8 @@
                     </Tooltip>
                   </div>
                   <div class="value font-medium weight-bold">
-                    {{ Math.round(estimatedAPY * 2) / 100 }} %
+                    <!-- {{ Math.round(estimatedAPY * 2) / 100 }} % -->
+                    30 %
                     <img
                       class="calc-icon icon-cursor"
                       src="@/assets/icons/calculator.svg"

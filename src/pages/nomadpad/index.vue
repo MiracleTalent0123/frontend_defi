@@ -1,989 +1,899 @@
 <template>
-  <div class="fertilizer-project container launchpad-bg">
+  <div class="fertilizer container">
     <div class="card">
       <div class="card-body">
-        <SubscribeModal
-          :show="subscribeShow"
-          :content="SubscribeModalContent"
-          @onCancel="() => (subscribeShow = false)"
-          @onOk="
-            () => {
-              initSubscribe().then((res) => {
-                subscribeShow = false
-              })
-            }
-          "
-        />
-        <TaskProcessModal
-          :show="taskModalShow"
-          :step="taskModalType === 0 ? socialTicket.telegram + 1 : socialTicket.twitter + 1"
-          :project="fertilizer.title"
-          :type="taskModalType"
-          :mint="fertilizer.mint"
-          :tg_a="fertilizer.tg_a"
-          :tg_b="fertilizer.tg_b"
-          :tw_a="fertilizer.tw_a"
-          :tw_b="fertilizer.tw_b"
-          :retweetlink="fertilizer.retweetlink"
-          @onNext="
-            () => {
-              if (this.taskModalType === 0) {
-                this.socialTicket.telegram++
-                if (this.socialTicket.telegram == 3) {
-                  taskModalShow = false
-                  contextualizeUser()
-                }
-              } else {
-                this.socialTicket.twitter++
-                if (this.socialTicket.twitter == 3) {
-                  taskModalShow = false
-                  contextualizeUser()
-                }
-              }
-            }
-          "
-          @onPrev="
-            () => {
-              if (this.taskModalType === 0) this.socialTicket.telegram--
-              else this.socialTicket.twitter--
-            }
-          "
-          @onCancel="
-            () => {
-              contextualizeUser()
-              taskModalShow = false
-            }
-          "
-        />
-        <IDVerifyModal
-          :show="KYCModalShow"
-          @onCancel="() => (KYCModalShow = false)"
-          @onOk="
-            (driver, id, passport, selectedCountry, imgUrl) => {
-              sendKYC(driver, id, passport, selectedCountry, imgUrl)
-            }
-          "
-        />
+        <div class="fertilizers-container">
+          <div class="fertilizer-head fcsb-container">
+            <h3 class="title weight-bold">Nomadpad</h3>
+            <div class="information">
+              <div class="tvl-info">
+                <p class="font-large weight-semi">TVL : ${{ TVL.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') }}</p>
+              </div>
 
-        <div class="project-content">
-          <div class="project-preview-container">
-            <div class="project-back">
-              <!-- <div class="back-to-list icon-cursor fcs-container" @click="goBack"> 
-                <img class="back-icon" src="@/assets/icons/back.svg" /> 
-                <span class="back-label font-medium weight-bold">Go back</span> 
-              </div> -->
+              <div class="action-btn-group">
+                <div class="reload-btn icon-cursor" :class="activeSpinning ? 'active' : ''" @click="reloadTimer">
+                  <img src="@/assets/icons/reload.svg" />
+                </div>
+              </div>
             </div>
-            <div class="project-preview-ido-container">
-              <div class="project-preview">
-                <div class="project-overview fcsb-container">
-                  <div class="project-title fcs-container">
-                    <img class="project-logo" :src="fertilizer.logo" />
-                    <span class="font-large weight-bold">{{ fertilizer.title }}</span>
-                  </div>
-                  <div
-                    class="project-status"
-                    :class="
-                      currentStep === 0
-                        ? 'preparation'
-                        : currentStep === 1
-                        ? 'whitelist'
-                        : currentStep === 2 && currentTimestamp < fertilizer.sales_start_date
-                        ? 'sales'
-                        : currentStep === 2 &&
-                          currentTimestamp > fertilizer.sales_start_date &&
-                          fertilizer.sales_end_date > currentTimestamp
-                        ? 'open'
-                        : (currentStep === 2 && currentTimestamp > fertilizer.sales_end_date) ||
-                          (currentStep === 3 && !currentStatus.funded)
-                        ? 'distribution'
-                        : ''
+          </div>
+
+          <div class="fertilizer-option-bar fcsb-container">
+            <div class="option-tab-group">
+              <div class="option-tab">
+                <Button
+                  class="font-large weight-semi icon-cursor"
+                  :class="filterProject === filterOptions.upcoming ? 'active-tab' : ''"
+                  @click="
+                    () => {
+                      this.filterProject = filterOptions.upcoming
+                    }
+                  "
+                  >Upcoming Projects</Button
+                >
+                <div v-if="filterProject === filterOptions.upcoming" class="active-underline"></div>
+              </div>
+              <div class="option-tab">
+                <Button
+                  class="font-large weight-semi icon-cursor"
+                  :class="filterProject === filterOptions.funded ? 'active-tab' : ''"
+                  @click="
+                    () => {
+                      this.filterProject = filterOptions.funded
+                    }
+                  "
+                >
+                  Funded projects
+                </Button>
+                <div v-if="filterProject === filterOptions.funded" class="active-underline"></div>
+              </div>
+            </div>
+
+            <div
+              class="option-tab-group option-tab-collapse icon-cursor"
+              @click="
+                () => {
+                  this.showTabMenu = !this.showTabMenu
+                }
+              "
+            >
+              <label class="font-large weight-semi icon-cursor">
+                {{
+                  filterProject === filterOptions.upcoming
+                    ? filterOptions.upcoming
+                    : filterProject === filterOptions.funded
+                    ? filterOptions.funded
+                    : ''
+                }}
+              </label>
+              <img
+                class="arrow-icon"
+                :class="showTabMenu ? 'arrow-up' : 'arrow-down'"
+                src="@/assets/icons/arrow-down-white.svg"
+              />
+
+              <div
+                v-if="showTabMenu"
+                class="option-sort-collapse collapse-left"
+                v-click-outside="
+                  () => {
+                    this.showTabMenu = false
+                  }
+                "
+              >
+                <div
+                  class="collapse-item text-center font-medium weight-semi icon-cursor"
+                  :class="filterProject === filterOptions.upcoming ? 'active-item' : ''"
+                  @click="
+                    () => {
+                      this.filterProject = filterOptions.upcoming
+                    }
+                  "
+                >
+                  Upcoming
+                </div>
+                <div
+                  class="collapse-item text-center font-medium weight-semi icon-cursor"
+                  :class="filterProject === filterOptions.funded ? 'active-item' : ''"
+                  @click="
+                    () => {
+                      this.filterProject = filterOptions.funded
+                    }
+                  "
+                >
+                  Funded
+                </div>
+              </div>
+            </div>
+
+            <div class="option-filter-group">
+              <div class="option-filter option-filter-fixed fcc-container icon-cursor">
+                <img
+                  src="@/assets/icons/search.svg"
+                  @click="
+                    () => {
+                      this.showSearchMenu = !this.showSearchMenu
+                    }
+                  "
+                />
+              </div>
+
+              <div
+                v-if="showSearchMenu"
+                class="option-search-collapse"
+                v-click-outside="
+                  () => {
+                    this.showSearchMenu = false
+                  }
+                "
+              >
+                <div class="collapse-item-header fcsb-container">
+                  <label class="font-large weight-bold">Search</label>
+                  <img
+                    class="icon-cursor"
+                    src="@/assets/icons/close-circle.svg"
+                    @click="
+                      () => {
+                        this.showSearchMenu = false
+                      }
                     "
-                  >
-                    <span class="font-xsmall weight-bold">
+                  />
+                </div>
+                <div class="collapse-item-body">
+                  <input ref="userInput" v-model="searchName" class="font-medium" placeholder="Search" />
+                </div>
+              </div>
+
+              <div
+                class="option-filter option-sort fcc-container icon-cursor"
+                @click="
+                  () => {
+                    this.showFilterMenu = !this.showFilterMenu
+                  }
+                "
+              >
+                <span class="option-sort-item fcc-container font-body-medium weight-semi">
+                  <label>Sort by:</label>
+                  <span class="sort-detail">
+                    <span v-if="filterProject === filterOptions.upcoming">
                       {{
-                        currentStep === 0
-                          ? projectStatus.preparation
-                          : currentStep === 1
-                          ? projectStatus.whitelist
-                          : currentStep === 2 && fertilizer.sales_start_date > currentTimestamp
-                          ? projectStatus.sales
-                          : currentStep === 2 &&
-                            currentTimestamp > fertilizer.sales_start_date &&
-                            fertilizer.sales_end_date > currentTimestamp
-                          ? projectStatus.open
-                          : (currentStep === 2 && currentTimestamp > fertilizer.sales_end_date) ||
-                            (currentStep === 3 && !currentStatus.funded)
-                          ? projectStatus.distribution
+                        sortUpcoming === filterOptions.all
+                          ? filterOptions.all
+                          : sortUpcoming === filterOptions.whitelist
+                          ? filterOptions.whitelist
+                          : sortUpcoming === filterOptions.sales
+                          ? filterOptions.sales
+                          : sortUpcoming === filterOptions.distribution
+                          ? filterOptions.distribution
+                          : sortUpcoming === filterOptions.preparation
+                          ? filterOptions.preparation
+                          : filterOptions.all
+                      }}
+                    </span>
+                    <span v-else>
+                      {{
+                        sortFunded === sortOptions.investors
+                          ? sortOptions.investors + (sortAsc ? ' (High > Low)' : ' (Low > High)')
+                          : sortFunded === sortOptions.total_raised
+                          ? sortOptions.total_raised + (sortAsc ? ' (High > Low)' : ' (Low > High)')
+                          : sortFunded === sortOptions.token_price
+                          ? sortOptions.token_price + (sortAsc ? ' (High > Low)' : ' (Low > High)')
+                          : sortFunded === sortOptions.ath
+                          ? sortOptions.ath + (sortAsc ? ' (High > Low)' : ' (Low > High)')
+                          : sortFunded === sortOptions.end_date
+                          ? sortOptions.end_date + (sortAsc ? ' (High > Low)' : ' (Low > High)')
                           : ''
                       }}
                     </span>
-                  </div>
-                </div>
-                <div
-                  v-if="
-                    (currentStep === 0 && currentTimestamp < fertilizer.whitelist_start_date) ||
-                    (currentStep >= 1 && currentStep < 3)
-                  "
-                  class="project-countdown"
-                >
-                  <Countdown
-                    :title="
-                      currentStep === 0 && currentTimestamp < fertilizer.whitelist_start_date
-                        ? 'The whitelist starts in'
-                        : currentStep === 1
-                        ? 'The Whitelist ends in'
-                        : currentStep === 2 && currentTimestamp < fertilizer.sales_start_date
-                        ? 'Sales start in'
-                        : currentStep === 2 &&
-                          currentTimestamp > fertilizer.sales_start_date &&
-                          currentTimestamp < fertilizer.sales_end_date
-                        ? 'Sales end in'
-                        : currentStep === 2 && currentTimestamp > fertilizer.sales_end_date
-                        ? 'Distribution starts in'
-                        : ''
-                    "
-                    :value="
-                      currentStep === 0 && currentTimestamp < fertilizer.whitelist_start_date
-                        ? fertilizer.whitelist_start_date
-                        : currentStep === 1
-                        ? fertilizer.whitelist_end_date
-                        : currentStep === 2 && currentTimestamp < fertilizer.sales_start_date
-                        ? fertilizer.sales_start_date
-                        : currentStep === 2 &&
-                          currentTimestamp > fertilizer.sales_start_date &&
-                          currentTimestamp < fertilizer.sales_end_date
-                        ? fertilizer.sales_end_date
-                        : currentStep === 2 && currentTimestamp > fertilizer.sales_end_date
-                        ? fertilizer.distribution_start_date
-                        : ''
-                    "
-                    format="DD:HH:mm:ss"
-                  />
-                </div>
-                <div v-if="currentStep > 0" class="project-progress">
-                  <div v-if="currentStep === 1">
-                    <div v-if="!userRegistered" class="btn-container">
-                      <Button
-                        class="btn-transparent font-medium weight-semi icon-cursor"
-                        @click="
-                          () => {
-                            if (this.wallet.connected) this.subscribeShow = true
-                            else this.$accessor.wallet.openModal()
-                          }
-                        "
-                        >Join Whitelist</Button
-                      >
-                    </div>
-                    <div v-else class="fcc-container">
-                      <img class="status-icon" src="@/assets/icons/check-circle-white.svg" />
-                      <span class="font-small weight-semi spacing-large">You are whitelisted</span>
-                    </div>
-                  </div>
-                  <div v-else-if="currentStep === 2">
-                    <div v-if="currentTimestamp < fertilizer.sales_end_date">
-                      <div v-if="userRegistered" class="fcc-container">
-                        <img class="status-icon" src="@/assets/icons/check-circle-white.svg" />
-                        <span class="font-small weight-semi spacing-large">You are registered</span>
-                      </div>
-                      <div v-else class="fcc-container">
-                        <img class="alert-icon" src="@/assets/icons/alert-white.svg" />
-                        <span class="font-small weight-semi spacing-large">You are not in the whitelist</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div v-else-if="currentStep === 3">
-                    <div v-if="!currentStatus.funded" class="fcc-container">
-                      <img class="status-icon" src="@/assets/icons/check-circle-white.svg" />
-                      <span class="font-small weight-semi spacing-large">Distribution in progress</span>
-                    </div>
-                    <div v-else class="btn-container">
-                      <Button class="btn-transparent font-medium weight-semi icon-cursor">Start Farming</Button>
-                    </div>
-                  </div>
-                </div>
+                    <img
+                      class="arrow-icon"
+                      :class="showFilterMenu ? 'arrow-up' : 'arrow-down'"
+                      src="@/assets/icons/arrow-down-white.svg"
+                    />
+                  </span>
+                </span>
               </div>
-              <div class="project-ido">
-                <div class="project-ido-process">
-                  <span class="label font-medium weight-bold">IDO process:</span>
-                  <Steps :current="currentStep" size="small" direction="vertical" :status="currentStatus.steps">
-                    <Step>
-                      <template slot="title">
-                        <span class="font-small weight-bold">Preparation</span>
-                      </template>
-                    </Step>
-                    <Step>
-                      <template slot="title">
-                        <div class="fcsb-container">
-                          <span class="font-small weight-bold">Whitelist</span>
-                          <span
-                            v-if="currentStep >= 1 && userRegistered"
-                            class="status-label success font-small weight-bold"
-                            >Registered</span
-                          >
-                          <span
-                            v-if="currentStep > 1 && !userRegistered"
-                            class="status-label failed font-small weight-bold"
-                            >Not Registered</span
-                          >
-                        </div>
-                        <span v-if="currentStep === 1" class="status-label description font-small">
-                          You can now register for the whitelist</span
-                        >
-                      </template>
-                    </Step>
-                    <Step>
-                      <template slot="title">
-                        <div class="fcsb-container">
-                          <span class="font-small weight-bold">Sales</span>
-                          <span v-if="currentStep > 2" class="status-label closed font-small weight-bold">Closed</span>
-                        </div>
-                        <span v-if="currentStep === 2" class="status-label description font-small"
-                          >The purchase of NNI Tokens is live!</span
-                        >
-                      </template>
-                    </Step>
-                    <Step>
-                      <template slot="title">
-                        <div class="fcsb-container">
-                          <span class="font-small weight-bold">Distribution</span>
-                          <span v-if="currentStep >= 3" class="status-label success font-small weight-bold"
-                            >Distributed</span
-                          >
-                        </div>
-                        <span v-if="currentStep === 3" class="status-label description font-small"
-                          >The Sale tokens have been distributed</span
-                        >
-                      </template>
-                    </Step>
-                  </Steps>
+
+              <div class="option-filter option-filter-collapse option-filter-fixed fcc-container icon-cursor">
+                <img
+                  src="@/assets/icons/filter.svg"
+                  @click="
+                    () => {
+                      this.showFilterMenu = !this.showFilterMenu
+                    }
+                  "
+                />
+              </div>
+
+              <div
+                v-if="showFilterMenu"
+                v-click-outside="
+                  () => {
+                    this.showFilterMenu = false
+                  }
+                "
+              >
+                <div v-if="filterProject === filterOptions.upcoming" class="option-sort-collapse collapse-right">
+                  <div
+                    class="collapse-item text-center texts weight-bold icon-cursor"
+                    :class="sortUpcoming === filterOptions.all ? 'active-item' : ''"
+                    @click="sortByStatus(filterOptions.all)"
+                  >
+                    {{ filterOptions.all }}
+                  </div>
+                  <div
+                    class="collapse-item text-center texts weight-bold icon-cursor"
+                    :class="sortUpcoming === filterOptions.whitelist ? 'active-item' : ''"
+                    @click="sortByStatus(filterOptions.whitelist)"
+                  >
+                    {{ filterOptions.whitelist }}
+                  </div>
+                  <div
+                    class="collapse-item text-center texts weight-bold icon-cursor"
+                    :class="sortUpcoming === filterOptions.sales ? 'active-item' : ''"
+                    @click="sortByStatus(filterOptions.sales)"
+                  >
+                    {{ filterOptions.sales }}
+                  </div>
+                  <div
+                    class="collapse-item text-center texts weight-bold icon-cursor"
+                    :class="sortUpcoming === filterOptions.distribution ? 'active-item' : ''"
+                    @click="sortByStatus(filterOptions.distribution)"
+                  >
+                    {{ filterOptions.distribution }}
+                  </div>
+                  <div
+                    class="collapse-item text-center texts weight-bold icon-cursor"
+                    :class="sortUpcoming === filterOptions.preparation ? 'active-item' : ''"
+                    @click="sortByStatus(filterOptions.preparation)"
+                  >
+                    {{ filterOptions.preparation }}
+                  </div>
+                </div>
+                <div v-else-if="filterProject === filterOptions.funded" class="option-sort-collapse collapse-right">
+                  <div
+                    class="collapse-item text-center texts weight-bold icon-cursor"
+                    :class="sortFunded === sortOptions.investors && !sortAsc ? 'active-item' : ''"
+                    @click="sortByColumnMenu(sortOptions.investors, false)"
+                  >
+                    {{ sortOptions.investors }} (Low > High)
+                  </div>
+                  <div
+                    class="collapse-item text-center texts weight-bold icon-cursor"
+                    :class="sortFunded === sortOptions.investors && sortAsc ? 'active-item' : ''"
+                    @click="sortByColumnMenu(sortOptions.investors, true)"
+                  >
+                    {{ sortOptions.investors }} (High > Low)
+                  </div>
+                  <div
+                    class="collapse-item text-center texts weight-bold icon-cursor"
+                    :class="sortFunded === sortOptions.total_raised && !sortAsc ? 'active-item' : ''"
+                    @click="sortByColumnMenu(sortOptions.total_raised, false)"
+                  >
+                    {{ sortOptions.total_raised }} (Low > High)
+                  </div>
+                  <div
+                    class="collapse-item text-center texts weight-bold icon-cursor"
+                    :class="sortFunded === sortOptions.total_raised && sortAsc ? 'active-item' : ''"
+                    @click="sortByColumnMenu(sortOptions.total_raised, true)"
+                  >
+                    {{ sortOptions.total_raised }} (High > Low)
+                  </div>
+                  <div
+                    class="collapse-item text-center texts weight-bold icon-cursor"
+                    :class="sortFunded === sortOptions.ath && !sortAsc ? 'active-item' : ''"
+                    @click="sortByColumnMenu(sortOptions.ath, false)"
+                  >
+                    {{ sortOptions.ath }} (Low > High)
+                  </div>
+                  <div
+                    class="collapse-item text-center texts weight-bold icon-cursor"
+                    :class="sortFunded === sortOptions.ath && sortAsc ? 'active-item' : ''"
+                    @click="sortByColumnMenu(sortOptions.ath, true)"
+                  >
+                    {{ sortOptions.ath }} (High > Low)
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          <div class="project-detail-container">
-            <div class="project-detail-static">
-              <div class="project-detail-card">
-                <div class="project-detail-desc">
-                  <div class="project-title fcs-container">
-                    <img class="project-logo" :src="fertilizer.logo" />
-                    <h4 class="weight-bold spacing-medium">{{ fertilizer.title }}</h4>
+
+          <div class="fertilizer-content">
+            <Row v-if="filterProject != filterOptions.funded" :gutter="[18, 28]">
+              <Col
+                v-for="(fertilizer, idx) in fertilizerItems"
+                :key="fertilizer.key"
+                :lg="idx === 0 ? 12 : 6"
+                :md="idx === 0 ? 16 : 8"
+                :sm="24"
+              >
+                <div class="fertilizer-project-table" :class="idx === 0 ? 'first' : ''">
+                  <div class="project-banner">
+                    <img class="banner" :src="fertilizer.picture" />
+                    <div
+                      class="project-status"
+                      :class="
+                        fertilizer.status === filterOptions.upcoming
+                          ? 'upcoming'
+                          : fertilizer.status === filterOptions.whitelist
+                          ? 'whitelist'
+                          : fertilizer.status === filterOptions.sales
+                          ? 'sales'
+                          : fertilizer.status === filterOptions.distribution
+                          ? 'distribution'
+                          : fertilizer.status === filterOptions.preparation
+                          ? 'preparation'
+                          : ''
+                      "
+                    >
+                      <span class="font-xsmall weight-bold">
+                        {{
+                          fertilizer.status === filterOptions.sales && currentTimestamp > fertilizer.sales_start_date
+                            ? 'Open Sales'
+                            : fertilizer.status
+                        }}
+                      </span>
+                    </div>
                   </div>
-                  <div class="project-short-desc">
-                    <span class="font-medium weight-semi">{{ fertilizer.short_desc }}</span>
+
+                  <div class="project-details">
+                    <div class="project-desc" :class="idx === 0 ? 'project-desc-whitelist fssb-container' : ''">
+                      <div class="project-title">
+                        <h4 class="title weight-bold spacing-medium">{{ fertilizer.title }}</h4>
+                        <span class="short-desc font-medium weight-semi spacing-small">{{
+                          fertilizer.short_desc
+                        }}</span>
+                      </div>
+
+                      <div class="project-info fcsb-container">
+                        <div class="project-balance">
+                          <span class="label font-small weight-semi spacing-large">Total raise</span>
+                          <span class="value font-medium weight-semi spacing-small fcs-container">
+                            <CoinIcon class="coin-icon" :mint-address="fertilizer.price_token_mint" />
+                            {{ fertilizer.hard_cap }} {{ fertilizer.price_token }}
+                            <!-- TBA -->
+                          </span>
+                        </div>
+                        <div class="project-balance">
+                          <div v-if="fertilizer.subscribers">
+                            <span class="label font-small weight-semi spacing-large">Subscribers</span>
+                            <span class="value font-medium weight-semi spacing-small fcs-container">{{
+                              fertilizer.subscribers
+                            }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div v-if="idx === 0" class="project-info whitelist-countdown fcc-container text-center">
+                      <Countdown
+                        v-if="fertilizer.distribution_start_date > currentTimestamp"
+                        :title="
+                          fertilizer.status === filterOptions.whitelist
+                            ? 'The Whitelist ends in'
+                            : fertilizer.status === filterOptions.sales &&
+                              currentTimestamp < fertilizer.sales_start_date
+                            ? 'Sales starts in'
+                            : fertilizer.status === filterOptions.sales &&
+                              currentTimestamp > fertilizer.sales_start_date
+                            ? 'End of the sales in'
+                            : fertilizer.status === filterOptions.distribution
+                            ? 'Distribution starts in'
+                            : fertilizer.status === filterOptions.preparation
+                            ? 'Whitelist starts in'
+                            : ''
+                        "
+                        :value="
+                          fertilizer.status === filterOptions.whitelist
+                            ? fertilizer.whitelist_end_date
+                            : fertilizer.status === filterOptions.sales &&
+                              currentTimestamp < fertilizer.sales_start_date
+                            ? fertilizer.sales_start_date
+                            : fertilizer.status === filterOptions.sales &&
+                              currentTimestamp > fertilizer.sales_start_date
+                            ? fertilizer.sales_end_date
+                            : fertilizer.status === filterOptions.distribution
+                            ? fertilizer.distribution_start_date
+                            : fertilizer.status === filterOptions.preparation
+                            ? fertilizer.whitelist_start_date
+                            : 0
+                        "
+                        format="DD:HH:mm:ss"
+                      />
+                    </div>
+
+                    <div v-else class="project-info fcs-container">
+                      <div
+                        v-if="
+                          fertilizer.sales_start_date ||
+                          fertilizer.sales_end_date ||
+                          fertilizer.distribution_start_date ||
+                          fertilizer.distribution_end_date ||
+                          fertilizer.whitelist_start_date ||
+                          fertilizer.whitelist_end_date
+                        "
+                      >
+                        <div
+                          v-if="
+                            fertilizer.status === filterOptions.sales && currentTimestamp > fertilizer.sales_start_date
+                          "
+                          class="project-status open"
+                        >
+                          <span class="font-xsmall weight-bold">Open Now</span>
+                        </div>
+                        <div v-else-if="fertilizer.distribution_start_date > currentTimestamp" class="project-balance">
+                          <span class="label font-small weight-semi spacing-large">
+                            {{
+                              fertilizer.status === filterOptions.preparation
+                                ? 'Whitelist starts in'
+                                : fertilizer.status === filterOptions.whitelist
+                                ? 'Whitelist ends in'
+                                : fertilizer.status === filterOptions.sales
+                                ? 'Sales starts in'
+                                : fertilizer.status === filterOptions.distribution
+                                ? 'Distribution starts in'
+                                : ''
+                            }}
+                          </span>
+                          <span
+                            class="value fcs-container"
+                            v-if="fertilizer.distribution_start_date > currentTimestamp"
+                          >
+                            <Countdown
+                              :value="
+                                fertilizer.status === filterOptions.preparation
+                                  ? fertilizer.whitelist_start_date
+                                  : fertilizer.status === filterOptions.whitelist
+                                  ? fertilizer.whitelist_end_date
+                                  : fertilizer.status === filterOptions.sales
+                                  ? fertilizer.sales_start_date
+                                  : fertilizer.status === filterOptions.distribution
+                                  ? fertilizer.distribution_start_date
+                                  : 0
+                              "
+                              format="DD:HH:mm:ss"
+                            />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="btn-container">
+                      <Button
+                        @click="goToProject(fertilizer)"
+                        v-if="fertilizer.status === filterOptions.whitelist"
+                        class="btn-transparent font-medium weight-semi fcc-container spacing-small"
+                        >Subscription</Button
+                      >
+                      <Button
+                        @click="goToProject(fertilizer)"
+                        v-else
+                        class="btn-transparent font-medium weight-semi fcc-container spacing-small"
+                        >Research Now</Button
+                      >
+                    </div>
                   </div>
-                  <span class="font-medium">{{ fertilizer.long_desc }}</span>
                 </div>
-                <div class="project-detail-info-group">
-                  <Row :gutter="16">
-                    <Col :md="8" :sm="12" :xs="12" class="project-detail-info-item">
-                      <span class="title font-small weight-semi spacing-large">Token Price</span>
-                      <div class="value fcs-container">
-                        <CoinIcon class="coin-icon" :mint-address="fertilizer.price_token_mint" />
-                        <span class="font-medium"
-                          ><b>{{ fertilizer.ido_info.sale_rate }}</b> {{ fertilizer.price_token }}</span
+              </Col>
+            </Row>
+
+            <div v-else>
+              <div class="fertilizer-funded-table isDesktop">
+                <Row class="fertilizer-funded-table-header">
+                  <Col class="header-column font-small weight-bold text-left" span="6"> Project name </Col>
+                  <Col class="header-column font-small weight-bold" span="3">
+                    <div class="header-column-title" @click="sortByColumn(sortOptions.investors)">
+                      Investors
+                      <img
+                        v-if="sortFunded === sortOptions.investors"
+                        src="@/assets/icons/arrow-down-green.svg"
+                        class="arrow-icon"
+                        :class="sortFunded === sortOptions.investors && sortAsc ? 'arrow-down' : 'arrow-up'"
+                      />
+                      <img
+                        v-else
+                        src="@/assets/icons/arrow-down-white.svg"
+                        class="arrow-icon"
+                        :class="sortFunded === sortOptions.investors && sortAsc ? 'arrow-down' : 'arrow-up'"
+                      />
+                    </div>
+                  </Col>
+                  <Col class="header-column font-small weight-bold" span="4">
+                    <div class="header-column-title" @click="sortByColumn(sortOptions.total_raised)">
+                      Total raise
+                      <img
+                        v-if="sortFunded === sortOptions.total_raised"
+                        src="@/assets/icons/arrow-down-green.svg"
+                        class="arrow-icon"
+                        :class="sortFunded === sortOptions.total_raised && sortAsc ? 'arrow-down' : 'arrow-up'"
+                      />
+                      <img
+                        v-else
+                        src="@/assets/icons/arrow-down-white.svg"
+                        class="arrow-icon"
+                        :class="sortFunded === sortOptions.total_raised && sortAsc ? 'arrow-down' : 'arrow-up'"
+                      />
+                    </div>
+                  </Col>
+                  <Col class="header-column font-small weight-bold" span="3">
+                    <div class="header-column-title" @click="sortByColumn(sortOptions.token_price)">
+                      Token price
+                      <img
+                        v-if="sortFunded === sortOptions.token_price"
+                        src="@/assets/icons/arrow-down-green.svg"
+                        class="arrow-icon"
+                        :class="sortFunded === sortOptions.token_price && sortAsc ? 'arrow-down' : 'arrow-up'"
+                      />
+                      <img
+                        v-else
+                        src="@/assets/icons/arrow-down-white.svg"
+                        class="arrow-icon"
+                        :class="sortFunded === sortOptions.token_price && sortAsc ? 'arrow-down' : 'arrow-up'"
+                      />
+                    </div>
+                  </Col>
+                  <Col class="header-column font-small weight-bold" span="3">
+                    <div class="header-column-title" @click="sortByColumn(sortOptions.ath)">
+                      ATH Since IDO
+                      <img
+                        v-if="sortFunded === sortOptions.ath"
+                        src="@/assets/icons/arrow-down-green.svg"
+                        class="arrow-icon"
+                        :class="sortFunded === sortOptions.ath && sortAsc ? 'arrow-down' : 'arrow-up'"
+                      />
+                      <img
+                        v-else
+                        src="@/assets/icons/arrow-down-white.svg"
+                        class="arrow-icon"
+                        :class="sortFunded === sortOptions.ath && sortAsc ? 'arrow-down' : 'arrow-up'"
+                      />
+                    </div>
+                  </Col>
+                  <Col class="header-column font-small weight-bold" span="4">
+                    <div class="header-column-title" @click="sortByColumn(sortOptions.end_date)">
+                      Ended in UTC
+                      <img
+                        v-if="sortFunded === sortOptions.end_date"
+                        src="@/assets/icons/arrow-down-green.svg"
+                        class="arrow-icon"
+                        :class="sortFunded === sortOptions.end_date && sortAsc ? 'arrow-down' : 'arrow-up'"
+                      />
+                      <img
+                        v-else
+                        src="@/assets/icons/arrow-down-white.svg"
+                        class="arrow-icon"
+                        :class="sortFunded === sortOptions.end_date && sortAsc ? 'arrow-down' : 'arrow-up'"
+                      />
+                    </div>
+                  </Col>
+                </Row>
+
+                <div class="fertilizer-funded-table-body">
+                  <Row
+                    class="fertilizer-funded-table-item"
+                    v-for="(fertilizer, idx) in fertilizerItems"
+                    :key="fertilizer.key"
+                  >
+                    <Col class="state" span="6">
+                      <div class="project-name fcs-container">
+                        <img class="logo" :src="fertilizer.picture" />
+                        <div class="title">
+                          <span class="font-medium weight-semi">{{ fertilizer.title }}</span>
+                          <span class="short-desc bodXS weight-semi">{{ fertilizer.short_desc }}</span>
+                        </div>
+                      </div>
+                    </Col>
+
+                    <Col class="state font-medium weight-semi" span="3">
+                      {{ fertilizer.investors }}
+                    </Col>
+
+                    <Col class="state font-medium weight-semi" span="4">
+                      ${{ new TokenAmount(fertilizer.hard_cap, 2, false).format() }}
+                    </Col>
+                    <Col class="state font-medium weight-semi" span="3">
+                      ${{ new TokenAmount(fertilizer.token_price, 3, false).format() }}
+                    </Col>
+                    <Col class="state font-medium weight-semi" span="3">
+                      <div class="project-ath fcc-container">
+                        <Tooltip placement="bottomLeft">
+                          <template slot="title">
+                            <span class="font-small weight-semi">If you invested 100$ you would have 1000$</span>
+                          </template>
+                          <div class="info-icon">
+                            <img src="@/assets/icons/info.svg" />
+                          </div>
+                        </Tooltip>
+                        <span class="value font-medium weight-semi spacing-small">+{{ fertilizer.ath }}%</span>
+                      </div>
+                    </Col>
+                    <Col class="state font-medium weight-semi" span="4">
+                      {{ moment(fertilizer.distribution_end_date).format('MMMM Do YYYY') }}
+                    </Col>
+                    <Col class="state" span="1">
+                      <div class="show-more icon-cursor" @click="showMore(idx)">
+                        <img src="@/assets/icons/dot3.svg" />
+                        <div
+                          v-if="showMoreMenu[idx]"
+                          class="option-sort-collapse collapse-right"
+                          v-click-outside="hideMore"
                         >
+                          <div
+                            @click="goToProject(fertilizer)"
+                            class="collapse-item text-center font-medium weight-semi icon-cursor"
+                          >
+                            <a> See project </a>
+                          </div>
+                          <div class="collapse-item text-center font-medium weight-semi icon-cursor">
+                            <a> Stake </a>
+                          </div>
+                          <div class="collapse-item text-center font-medium weight-semi icon-cursor">
+                            <a> Swap </a>
+                          </div>
+                          <div class="collapse-item text-center font-medium weight-semi icon-cursor">
+                            <a class="social-link fcc-container" href="#" target="_blank">
+                              Share
+                              <img class="social-icon" src="@/assets/icons/share.svg" />
+                            </a>
+                          </div>
+                          <div class="collapse-item text-center font-medium weight-semi icon-cursor">
+                            <a class="social-link fcc-container" href="#" target="_blank">
+                              Twitter
+                              <img class="social-icon" src="@/assets/icons/twitter-white.svg" />
+                            </a>
+                          </div>
+                        </div>
                       </div>
                     </Col>
-                    <Col :md="8" :sm="12" :xs="12" class="project-detail-info-item">
-                      <span class="title font-small weight-semi spacing-large">Hard Cap</span>
-                      <div class="value fcs-container">
-                        <CoinIcon class="coin-icon" :mint-address="fertilizer.price_token_mint" />
-                        <span class="font-medium"
-                          ><b>{{ fertilizer.ido_info.hard_cap }}</b> {{ fertilizer.price_token }}</span
-                        >
-                      </div>
-                    </Col>
-                    <Col :md="8" :sm="12" :xs="12" class="project-detail-info-item">
-                      <span class="title font-small weight-semi spacing-large">Pool Size</span>
-                      <div class="value fcs-container">
-                        <img class="coin-icon" :src="fertilizer.logo" />
-                        <span class="font-medium"
-                          ><b>{{ fertilizer.pool_size }}</b> {{ fertilizer.token_info.symbol }}</span
-                        >
-                      </div>
-                    </Col>
-                    <Col :md="8" :sm="12" :xs="12" class="project-detail-info-item">
-                      <span class="title font-small weight-semi spacing-large">Blockchain</span>
-                      <div class="value fcs-container">
-                        <img class="lock-icon" src="@/assets/icons/sol.png" />
-                        <span class="font-medium weight-semi">{{ fertilizer.ido_info.sale_type }}</span>
-                      </div>
-                    </Col>
-                    <Col :md="8" :sm="12" :xs="12" class="project-detail-info-item">
-                      <span class="title font-small weight-semi spacing-large">Your allocation</span>
-                      <div class="value">
-                        <span class="font-medium weight-semi">{{ userAllocation }}</span>
-                      </div>
-                    </Col>
-                    <!-- <Col :md="8" :sm="12" :xs="12" class="project-detail-info-item"> 
-                      <span class="title font-small weight-semi spacing-large">Website</span> 
-                      <div class="value"> 
-                        <a class="website font-medium weight-semi" :href="fertilizer.website_url" target="_blank">{{ 
-                          fertilizer.website 
-                        }}</a> 
-                      </div> 
-                    </Col> -->
                   </Row>
                 </div>
               </div>
-            </div>
 
-            <div class="project-detail-condition">
-              <div
-                class="project-detail-item"
-                v-if="
-                  (currentStep === 1 && KYCStatus.step < 3 && currentTier > 3 && currentStatus.subscribe) ||
-                  (currentStep === 2 &&
-                    KYCStatus.step < 3 &&
-                    (currentStatus.win || (currentTier > 3 && currentStatus.subscribe)))
-                "
-              >
-                <div class="project-detail-open">
-                  <div>
-                    <!-- <div class="kyc-form"> 
-                      <div class="kyc-progress-container fcs-container"> 
-                        <div class="kyc-step text-center" :class="KYCStatus.step >= 1 ? 'active' : ''"> 
-                          <span class="kyc-no m-auto font-medium weight-bold">1</span> 
-                          <span class="kyc-title font-small weight-bold">ID Verification</span> 
-                        </div> 
-                        <div class="kyc-step text-center" :class="KYCStatus.step >= 2 ? 'active' : ''"> 
-                          <span class="kyc-no m-auto font-medium weight-bold">2</span> 
-                          <span class="kyc-title font-small weight-bold">Verification</span> 
-                        </div> 
-                        <div class="kyc-step text-center" :class="KYCStatus.step >= 3 ? 'active' : ''"> 
-                          <span class="kyc-no m-auto font-medium weight-bold">3</span> 
-                          <span class="kyc-title font-small weight-bold">Start to buy</span> 
-                        </div> 
-                      </div> 
-                      <div v-if="KYCStatus.step < 3"> 
-                        <div class="kyc-status-container fcsb-container"> 
-                          <div class="kyc-current-step fcs-container"> 
-                            <span class="font-large weight-bold">ID Verification</span> 
-                            <img class="info-icon left" src="@/assets/icons/info.svg" /> 
-                          </div> 
-                          <span 
-                            class="kyc-status font-xsmall weight-bold" 
-                            :class=" 
-                              KYCStatus.step === 1 
-                                ? 'failed' 
-                                : KYCStatus.step === 2 && KYCStatus.verification === 1 
-                                ? 'progress' 
-                                : KYCStatus.step === 2 && KYCStatus.verification === 2 
-                                ? 'success' 
-                                : KYCStatus.step === 2 && KYCStatus.verification === 0 
-                                ? 'failed' 
-                                : '' 
-                            " 
-                            >{{ 
-                              KYCStatus.step === 1 
-                                ? 'Not verified' 
-                                : KYCStatus.step === 2 && KYCStatus.verification === 1 
-                                ? 'In progress' 
-                                : KYCStatus.step === 2 && KYCStatus.verification === 2 
-                                ? 'Verified' 
-                                : KYCStatus.step === 2 && KYCStatus.verification === 0 
-                                ? 'Verification failed' 
-                                : '' 
-                            }}</span 
-                          > 
-                        </div> 
-                        <div class="kyc-description"> 
-                          <span class="font-small weight-semi spacing-large"> 
-                            Before you can purchase your allocation, we need to verify your identity. It usually takes 
-                            between 24 and 48 hours to be verified. 
-                          </span> 
-                          <img 
-                            v-if="KYCStatus.step === 1" 
-                            class="kyc-status-icon flex m-auto" 
-                            src="@/assets/icons/kyc-verification.svg" 
-                          /> 
-                          <img 
-                            v-else-if="KYCStatus.step === 2 && KYCStatus.verification === 1" 
-                            class="kyc-status-icon flex m-auto" 
-                            src="@/assets/icons/kyc-progress.svg" 
-                          /> 
-                          <img 
-                            v-else-if="KYCStatus.step === 2 && KYCStatus.verification === 2" 
-                            class="kyc-status-icon flex m-auto" 
-                            src="@/assets/icons/kyc-success.svg" 
-                          /> 
-                          <img 
-                            v-else-if="KYCStatus.step === 2 && KYCStatus.verification === 0" 
-                            class="kyc-status-icon flex m-auto" 
-                            src="@/assets/icons/kyc-failed.svg" 
-                          /> 
-                        </div> 
-                        <div class="btn-container"> 
-                          <Button 
-                            class="btn-transparent font-medium weight-semi icon-cursor" 
-                            :disabled="KYCStatus.step === 2 && KYCStatus.verification === 1" 
-                            @click="KYCConfirm" 
-                            >{{ 
-                              KYCStatus.step === 1 
-                                ? 'Verify your ID now' 
-                                : KYCStatus.step === 2 && KYCStatus.verification === 1 
-                                ? 'Next' 
-                                : KYCStatus.step === 2 && KYCStatus.verification === 2 
-                                ? 'Next' 
-                                : KYCStatus.step === 2 && KYCStatus.verification === 0 
-                                ? 'Verify your ID again' 
-                                : '' 
-                            }}</Button 
-                          > 
-                        </div> 
-                      </div> 
-                    </div> -->
-                    <div v-if="KYCStatus.userVerified && KYCStatus.step === 3" class="buy-form">
-                      <span class="font-medium weight-semi spacing-small"
-                        >You can buy sale tokens and preview what you will receive below.</span
-                      >
-                      <div class="token-amount fcsb-container">
-                        <div class="token-amount-input fcs-container">
-                          <CoinIcon class="coin-icon" :mint-address="fertilizer.mint" />
-                          <input class="font-medium weight-bold" type="number" placeholder="673" />
-                        </div>
-                        <span class="font-xsmall weight-semi token-max-amount"
-                          >max 1500 {{ fertilizer.token_price }}</span
-                        >
-                      </div>
-                      <div class="receive-amount">
-                        <label class="font-xmall">You will receive:</label>
-                        <div class="receive-amount-output fcs-container">
-                          <img class="coin-icon" :src="fertilizer.logo" />
-                          <span class="receive-amount-value font-medium weight-semi spacing-small"
-                            >0.028 {{ fertilizer.title }}</span
-                          >
-                        </div>
-                      </div>
-                      <div class="btn-container">
-                        <Button class="btn-transparent font-medium weight-semi icon-cursor">Buy Now</Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div v-if="currentStep === 0"></div>
-              <div
-                v-else-if="currentStep === 1 && currentStatus.subscribe && currentTier <= 2"
-                class="project-detail-item"
-              >
-                <h4 class="weight-semi">You are now whitelisted for the NNI IDO Sale.</h4>
-                <span class="font-medium"> You can pay and claim once the whitelisting ends. Keep in touch. </span>
-                <!-- <div class="ticket-tasks-group fssb-container"> 
-                  <div class="ticket-tasks"> 
-                    <span class="font-medium weight-bold">Earn tickets by completing these tasks:</span> 
-                    <div class="ticket-task-status-group fcsb-container"> 
-                      <div 
-                        class="ticket-task-status-card fcsb-container icon-cursor" 
-                        :class="socialTicket.telegram === 3 ? 'active' : ''" 
-                        @click=" 
-                          () => { 
-                            if (this.socialTicket.telegram == 0 ? 0 : this.socialTicket.telegram - 1 < 2) { 
-                              this.taskModalShow = true 
-                              this.taskModalType = 0 
-                            } 
-                          } 
-                        " 
-                      > 
-                        <div class="ticket-task-status fs-container"> 
-                          <img class="ticket-social-icon" src="@/assets/icons/telegram-white.svg" /> 
-                          <div> 
-                            <span class="font-medium weight-bold">Telegram tasks</span> 
-                            <br /> 
-                            <span class="font-xsmall weight-semi" 
-                              >{{ socialTicket.telegram == 0 ? 0 : socialTicket.telegram - 1 }} /2 Tasks completed</span 
-                            > 
-                          </div> 
-                        </div> 
-                        <img 
-                          v-if="socialTicket.telegram === 2" 
-                          class="status-icon" 
-                          src="@/assets/icons/check-white.svg" 
-                        /> 
-                      </div> 
-                      <div 
-                        class="ticket-task-status-card fcsb-container icon-cursor" 
-                        :class="socialTicket.twitter === 3 ? 'active' : ''" 
-                        @click=" 
-                          () => { 
-                            if (this.socialTicket.twitter < 3) { 
-                              this.taskModalShow = true 
-                              this.taskModalType = 1 
-                            } 
-                          } 
-                        " 
-                      > 
-                        <div class="ticket-task-status fs-container"> 
-                          <img class="ticket-social-icon" src="@/assets/icons/twitter-white.svg" /> 
-                          <div> 
-                            <span class="font-medium weight-bold">Twitter tasks</span> 
-                            <br /> 
-                            <span class="font-xsmall weight-semi">{{ socialTicket.twitter }}/3 Tasks completed</span> 
-                          </div> 
-                        </div> 
-                        <img 
-                          v-if="socialTicket.twitter === 3" 
-                          class="status-icon" 
-                          src="@/assets/icons/check-white.svg" 
-                        /> 
-                      </div> 
-                    </div> 
-                    <span class="font-medium weight-bold">Share your referral below to earn additional tickets:</span> 
-                    <div class="ticket-share-group fcsb-container"> 
-                      <input type="text" class="ticket-share-link font-medium" :value="affiliatedLink" disabled /> 
-                      <img class="copy-icon icon-cursor" src="@/assets/icons/copy.svg" @click="copyToClipboard()" /> 
-                      <div v-if="copyNotification" class="copy-notification"> 
-                        <span class="font-small weight-semi spacing-large">Link was copied to clipboard</span> 
-                      </div> 
-                    </div> 
-                    <div class="ticket-btn-group fcsb-container"> 
-                      <div class="share-btn btn-container"> 
-                        <a :href="telegramShareLink" target="_blank"> 
-                          <Button class="btn-primary font-small weight-semi spacing-large icon-cursor" 
-                            >Share on Telegram</Button 
-                          ></a 
-                        > 
-                      </div> 
-                      <div class="share-btn btn-container"> 
-                        <a :href="twitterShareLink" target="_blank"> 
-                          <Button class="btn-primary font-small weight-semi spacing-large icon-cursor" 
-                            >Share on Twitter</Button 
-                          ></a 
-                        > 
-                      </div> 
-                    </div> 
-                  </div> 
-                  <div class="ticket-preview"> 
-                    <div class="ticket-earned"> 
-                      <span class="font-medium weight-bold" 
-                        >You are now registered for the {{ fertilizer.title }} whitelist and have:</span 
-                      > 
-                      <div class="ticket-earned-status fcs-container"> 
-                        <img class="referral-icon" src="@/assets/icons/referral.svg" /> 
-                        <div> 
-                          <span class="font-medium weight-semi spacing-small"> 
-                            <label class="font-large">{{ 
-                              total_tickets + (currentTier == 2 ? 300 : currentTier == 1 ? 20 : 0) 
-                            }}</label> 
-                            Earned Tickets 
-                          </span> 
-                          <br /> 
-                          <span class="font-xsmall" 
-                            >{{ social_tickets }} Social / {{ referral_tickets }} Referrals / 
-                            {{ currentTier == 2 ? 300 : currentTier == 1 ? 20 : 0 }} Tier {{ currentTier }}</span 
-                          > 
-                        </div> 
-                      </div> 
-                    </div> 
-                  </div> 
-                </div> -->
-              </div>
-
-              <div v-else-if="currentStep === 2 && wallet.connected" class="project-detail-item">
-                <div v-if="currentTimestamp < fertilizer.sales_start_date" class="project-detail-sales">
-                  <div v-if="userRegistered">
-                    <div class="fcc-container">
-                      <img class="status-icon" src="@/assets/icons/check-circle-white.svg" />
-                      <span class="font-medium weight-semi spacing-small"
-                        >Congratulations! You're officially registered and will be able to buy once the sale
-                        starts.</span
-                      >
-                    </div>
-                    <Countdown
-                      class="sales-start-countdown"
-                      title="Sale start in:"
-                      :value="fertilizer.sales_start_date"
-                      format="DD:HH:mm:ss"
-                    />
-                  </div>
-                  <div v-else-if="!currentStatus.win || !userRegistered" class="text-center">
-                    <div class="fcc-container mb-8">
-                      <img class="alert-icon" src="@/assets/icons/alert-white.svg" />
-                      <h4 class="weight-bold spacing-medium">
-                        Sorry, the whitelist has ended and it looks like you were not distributed allocation this time.
-                      </h4>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  v-else-if="
-                    currentTimestamp > fertilizer.sales_start_date &&
-                    currentTimestamp < fertilizer.sales_end_date &&
-                    wallet.connected
-                  "
-                >
-                  <div class="project-detail-open">
-                    <div v-if="userRegistered">
-                      <!-- <div class="kyc-form"> 
-                        <div class="kyc-progress-container fcs-container"> 
-                          <div class="kyc-step text-center" :class="KYCStatus.step >= 1 ? 'active' : ''"> 
-                            <span class="kyc-no m-auto font-medium weight-bold">1</span> 
-                            <span class="kyc-title font-small weight-bold">ID Verification</span> 
-                          </div> 
-                          <div class="kyc-step text-center" :class="KYCStatus.step >= 2 ? 'active' : ''"> 
-                            <span class="kyc-no m-auto font-medium weight-bold">2</span> 
-                            <span class="kyc-title font-small weight-bold">Verification</span> 
-                          </div> 
-                          <div class="kyc-step text-center" :class="KYCStatus.step >= 3 ? 'active' : ''"> 
-                            <span class="kyc-no m-auto font-medium weight-bold">3</span> 
-                            <span class="kyc-title font-small weight-bold">Start to buy</span> 
-                          </div> 
-                        </div> 
-                        <div v-if="KYCStatus.step < 3"> 
-                          <div class="kyc-status-container fcsb-container"> 
-                            <div class="kyc-current-step fcs-container"> 
-                              <span class="font-large weight-bold">ID Verification</span> 
-                              <img class="info-icon left" src="@/assets/icons/info.svg" /> 
-                            </div> 
-                            <span 
-                              class="kyc-status font-xsmall weight-bold" 
-                              :class=" 
-                                KYCStatus.step === 1 
-                                  ? 'failed' 
-                                  : KYCStatus.step === 2 && KYCStatus.verification === 1 
-                                  ? 'progress' 
-                                  : KYCStatus.step === 2 && KYCStatus.verification === 2 
-                                  ? 'success' 
-                                  : KYCStatus.step === 2 && KYCStatus.verification === 0 
-                                  ? 'failed' 
-                                  : '' 
-                              " 
-                              >{{ 
-                                KYCStatus.step === 1 
-                                  ? 'Not verified' 
-                                  : KYCStatus.step === 2 && KYCStatus.verification === 1 
-                                  ? 'In progress' 
-                                  : KYCStatus.step === 2 && KYCStatus.verification === 2 
-                                  ? 'Verified' 
-                                  : KYCStatus.step === 2 && KYCStatus.verification === 0 
-                                  ? 'Verification failed' 
-                                  : '' 
-                              }}</span 
-                            > 
-                          </div> 
-                          <div class="kyc-description"> 
-                            <span class="font-small weight-semi spacing-large"> 
-                              Before you can purchase your allocation, we need to verify your identity. It usually takes 
-                              between 24 and 48 hours to be verified. 
-                            </span> 
-                            <img 
-                              v-if="KYCStatus.step === 1" 
-                              class="kyc-status-icon flex m-auto" 
-                              src="@/assets/icons/kyc-verification.svg" 
-                            /> 
-                            <img 
-                              v-else-if="KYCStatus.step === 2 && KYCStatus.verification === 1" 
-                              class="kyc-status-icon flex m-auto" 
-                              src="@/assets/icons/kyc-progress.svg" 
-                            /> 
-                            <img 
-                              v-else-if="KYCStatus.step === 2 && KYCStatus.verification === 2" 
-                              class="kyc-status-icon flex m-auto" 
-                              src="@/assets/icons/kyc-success.svg" 
-                            /> 
-                            <img 
-                              v-else-if="KYCStatus.step === 2 && KYCStatus.verification === 0" 
-                              class="kyc-status-icon flex m-auto" 
-                              src="@/assets/icons/kyc-failed.svg" 
-                            /> 
-                          </div> 
-                          <div class="btn-container"> 
-                            <Button 
-                              class="btn-transparent font-medium weight-semi icon-cursor" 
-                              :disabled="KYCStatus.step === 2 && KYCStatus.verification === 1" 
-                              @click="KYCConfirm" 
-                              >{{ 
-                                KYCStatus.step === 1 
-                                  ? 'Verify your ID now' 
-                                  : KYCStatus.step === 2 && KYCStatus.verification === 1 
-                                  ? 'Next' 
-                                  : KYCStatus.step === 2 && KYCStatus.verification === 2 
-                                  ? 'Next' 
-                                  : KYCStatus.step === 2 && KYCStatus.verification === 0 
-                                  ? 'Verify your ID again' 
-                                  : '' 
-                              }}</Button 
-                            > 
-                          </div> 
-                        </div> 
-                      </div> -->
-                      <div v-if="KYCStatus.userVerified && KYCStatus.step === 3" class="buy-form">
-                        <span class="font-medium weight-semi spacing-small"
-                          >You can buy sale tokens and preview what you will receive below.</span
-                        >
-                        <div class="token-amount fcsb-container">
-                          <div class="token-amount-input fcs-container">
-                            <CoinIcon class="coin-icon" :mint-address="fertilizer.mint" />
-                            <input
-                              class="font-medium weight-bold"
-                              type="number"
-                              placeholder="input amount"
-                              v-model="buyAmount"
-                              @onInput="(amount) => (buyAmount = amount > 1000 ? 1000 : amount)"
-                            />
+              <div class="fertilizer-funded-table isTablet">
+                <Collapse v-model="showCollapse" accordion>
+                  <CollapsePanel
+                    v-for="(fertilizer, idx) in fertilizerItems"
+                    :key="fertilizer.key"
+                    v-show="true"
+                    :show-arrow="true"
+                  >
+                    <Row slot="header" class="collapse-header">
+                      <Col class="state" span="8">
+                        <div class="project-name fcs-container">
+                          <img class="logo" :src="fertilizer.picture" />
+                          <div class="title">
+                            <span class="font-medium weight-semi">{{ fertilizer.title }}</span>
+                            <span class="short-desc bodXS weight-semi">{{ fertilizer.short_desc }}</span>
                           </div>
-                          <span class="font-xsmall weight-semi token-max-amount">max 1000 USDC</span>
                         </div>
-                        <div class="receive-amount">
-                          <label class="font-xmall">You will receive:</label>
-                          <div class="receive-amount-output fcs-container">
-                            <img class="coin-icon" :src="fertilizer.logo" />
-                            <span class="receive-amount-value font-medium weight-semi spacing-small"
-                              >{{
-                                fertilizer.ido_info.sale_rate
-                                  ? (buyAmount / fertilizer.ido_info.sale_rate).toFixed(fertilizer.decimals_mint)
-                                  : ''
-                              }}
-                              {{ fertilizer.token_info.symbol }}</span
+                      </Col>
+
+                      <Col class="state text-center" span="5">
+                        <span class="label font-small weight-bold">Investors</span>
+                        <span class="font-medium weight-semi">{{ fertilizer.investors }} </span>
+                      </Col>
+
+                      <Col class="state font-medium weight-semi text-center" span="5">
+                        <span class="label font-small weight-bold">Total raise</span>
+                        ${{ new TokenAmount(fertilizer.hard_cap, 2, false).format() }}
+                      </Col>
+
+                      <Col class="state font-medium weight-semi text-center" span="5">
+                        <span class="label font-small weight-bold">Token price</span>
+                        ${{ new TokenAmount(fertilizer.token_price, 3, false).format() }}
+                      </Col>
+
+                      <Button class="detail-btn font-small weight-semi">
+                        <img
+                          class="arrow-icon"
+                          :class="idx != showCollapse ? 'arrow-up' : 'arrow-down'"
+                          src="@/assets/icons/arrow-down-white.svg"
+                        />
+                      </Button>
+                    </Row>
+
+                    <Row class="collapse-row" :gutter="[18, 18]">
+                      <Col :span="12">
+                        <div class="fssb-container">
+                          <div class="state">
+                            <span class="label font-small weight-bold">ATH Since IDO</span>
+                            <div class="project-ath fcc-container">
+                              <Tooltip placement="bottomLeft">
+                                <template slot="title">
+                                  <span class="font-small weight-semi">If you invested 100$ you would have 1000$</span>
+                                </template>
+                                <div class="info-icon">
+                                  <img src="@/assets/icons/info.svg" />
+                                </div>
+                              </Tooltip>
+                              <span class="value font-medium weight-semi spacing-small">+{{ fertilizer.ath }}%</span>
+                            </div>
+                          </div>
+
+                          <div class="state text-center" span="5">
+                            <span class="label font-small weight-bold">Ended in UTC</span>
+                            <span class="font-medium weight-semi">{{
+                              moment(fertilizer.distribution_end_date).format('MMMM Do YYYY')
+                            }}</span>
+                          </div>
+                        </div>
+                      </Col>
+
+                      <Col class="btn-group" :span="12">
+                        <div class="fce-container">
+                          <div class="btn-container">
+                            <Button @click="goToProject(fertilizer)" class="btn-primary font-small weight-bold">
+                              See project
+                            </Button>
+                          </div>
+
+                          <div class="btn-container">
+                            <Button class="btn-primary font-small weight-bold"> Stake </Button>
+                          </div>
+
+                          <div class="btn-container">
+                            <Button class="btn-primary font-small weight-bold"> Swap </Button>
+                          </div>
+                        </div>
+                      </Col>
+
+                      <Col class="btn-group" :span="24">
+                        <div class="fcc-container">
+                          <a
+                            class="social-link fcc-container font-xsmall weight-semi icon-cursor"
+                            href="#"
+                            target="_blank"
+                          >
+                            Share
+                            <img class="social-icon" src="@/assets/icons/share.svg" />
+                          </a>
+                          <a
+                            class="social-link fcc-container font-xsmall weight-semi icon-cursor"
+                            href="#"
+                            target="_blank"
+                          >
+                            Twitter
+                            <img class="social-icon" src="@/assets/icons/twitter-white.svg" />
+                          </a>
+                        </div>
+                      </Col>
+                    </Row>
+                  </CollapsePanel>
+                </Collapse>
+              </div>
+
+              <div class="fertilizer-funded-table isMobile">
+                <Collapse v-model="showCollapse" accordion>
+                  <CollapsePanel
+                    v-for="(fertilizer, idx) in fertilizerItems"
+                    :key="fertilizer.key"
+                    v-show="true"
+                    :show-arrow="true"
+                  >
+                    <Row slot="header" class="collapse-header">
+                      <Col class="state" span="23">
+                        <div class="project-name fcs-container">
+                          <img class="logo" :src="fertilizer.picture" />
+                          <div class="title">
+                            <span class="font-medium weight-semi">{{ fertilizer.title }}</span>
+                            <span class="short-desc bodXS weight-semi">{{ fertilizer.short_desc }}</span>
+                          </div>
+                        </div>
+                      </Col>
+
+                      <Button class="detail-btn font-small weight-semi">
+                        <img
+                          class="arrow-icon"
+                          :class="idx != showCollapse ? 'arrow-up' : 'arrow-down'"
+                          src="@/assets/icons/arrow-down-white.svg"
+                        />
+                      </Button>
+                    </Row>
+
+                    <Row class="collapse-row" :gutter="[18, 18]">
+                      <Col :span="24">
+                        <div class="fcsb-container">
+                          <div class="state">
+                            <span class="label font-small weight-bold">Total raise</span>
+                            <span class="font-medium weight-semi"
+                              >${{ new TokenAmount(fertilizer.hard_cap, 2, false).format() }}</span
                             >
                           </div>
-                        </div>
-                        <div class="btn-container">
-                          <Button
-                            class="btn-transparent font-medium weight-semi icon-cursor"
-                            @click="
-                              () => {
-                                if (this.wallet.connected) onClickBuyNow()
-                                else this.$accessor.wallet.openModal()
-                              }
-                            "
-                            >Buy Now</Button
-                          >
-                        </div>
-                      </div>
-                    </div>
-                    <div v-else-if="(!currentStatus.win || !currentStatus.subscribe) && false" class="text-center">
-                      <div class="fcc-container mb-8">
-                        <img class="alert-icon" src="@/assets/icons/alert-white.svg" />
-                        <h4 class="weight-bold spacing-medium">
-                          Sorry, the whitelist has ended and it looks like you were not distributed allocation this
-                          time.
-                        </h4>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div v-else>
-                  <div class="project-detail-open">
-                    <Countdown
-                      class="distribution-start-countdown"
-                      title="Distribution starts in:"
-                      :value="fertilizer.distribution_start_date"
-                      format="DD:HH:mm:ss"
-                    />
-                    <span class="font-medium weight-semi spacing-small"
-                      >You will receive your tokens once distribution begins. Be patient!</span
-                    >
-                    <div class="buy-form">
-                      <div class="token-amount fcsb-container">
-                        <div class="token-amount-input fcs-container">
-                          <CoinIcon class="coin-icon" :mint-address="fertilizer.mint" />
-                          <input
-                            class="font-medium weight-bold"
-                            type="number"
-                            placeholder="0"
-                            v-model="userPaidAmount"
-                            disabled
-                          />
-                        </div>
-                        <span class="font-xsmall weight-semi token-max-amount"> {{ fertilizer.price_token }}</span>
-                      </div>
-                      <div class="receive-amount">
-                        <label class="font-xmall">You will receive:</label>
-                        <div class="receive-amount-output fcs-container">
-                          <img class="coin-icon" :src="fertilizer.logo" />
-                          <span class="receive-amount-value font-medium weight-semi spacing-small"
-                            >{{
-                              fertilizer.ido_info.sale_rate
-                                ? (userPaidAmount / fertilizer.ido_info.sale_rate).toFixed(fertilizer.decimals_mint)
-                                : ''
-                            }}
-                            {{ fertilizer.token_info.symbol }}</span
-                          >
-                        </div>
-                      </div>
-                      <!-- <div class="receive-notification fb-container"> 
-                        <img class="info-icon right" src="@/assets/icons/info.svg" /> 
-                        <span class="font-xsmall weight-bold" 
-                          >You will receive your tokens on 
-                          <label class="font-small">Wallet ID: QlkjfjdsiuJDlkjf</label> 
-                        </span> 
-                      </div> -->
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <!-- FIXME: remove true -->
 
-              <div
-                v-else-if="
-                  currentStep === 3 && currentTimestamp > fertilizer.distribution_start_date && wallet.connected
-                "
-                class="project-detail-item"
-              >
-                <div
-                  v-if="currentTimestamp > fertilizer.distribution_start_date && userRegistered"
-                  class="project-detail-open"
-                >
-                  <span class="font-medium weight-semi spacing-small">Distribution in progress, keep in touch!</span>
-                  <div class="buy-form">
-                    <div class="token-amount fcsb-container">
-                      <div class="token-amount-input fcs-container">
-                        <CoinIcon class="coin-icon" :mint-address="fertilizer.mint" />
-                        <input
-                          class="font-medium weight-bold"
-                          type="number"
-                          placeholder="input amount"
-                          v-model="userPaidAmount"
-                          disabled
-                        />
-                      </div>
-                      <span class="font-xsmall weight-semi token-max-amount"> {{ fertilizer.price_token }}</span>
-                    </div>
-                    <div class="receive-amount">
-                      <label class="font-xmall">You will receive:</label>
-                      <div class="receive-amount-output fcs-container">
-                        <img class="coin-icon" :src="fertilizer.logo" />
-                        <span class="receive-amount-value font-medium weight-semi spacing-small"
-                          >{{
-                            fertilizer.ido_info.sale_rate
-                              ? (userPaidAmount / fertilizer.ido_info.sale_rate).toFixed(fertilizer.decimals_mint)
-                              : ''
-                          }}
-                          {{ fertilizer.token_info.symbol }}</span
-                        >
-                      </div>
-                    </div>
-                    <!--span class="font-xsmall weight-bold" 
-                        >You will receive your tokens on 
-                        <label class="font-small">Wallet ID:  
-                          {{ wallet.address.substr(0, 4) }} 
-                          ... 
-                          {{ wallet.address.substr(wallet.address.length - 4, 4) }}</label> 
-                      </span-->
-                    <div class="btn-container">
-                      <Button
-                        class="btn-transparent font-medium weight-semi icon-cursor"
-                        @click="
-                          () => {
-                            if (this.wallet.connected) onClaimTokens()
-                            else this.$accessor.wallet.openModal()
-                          }
-                        "
-                        >Claim Now</Button
-                      >
-                    </div>
-                  </div>
-                </div>
-                <div v-else-if="!currentStatus.win || !userRegistered" class="text-center">
-                  <div class="fcc-container mb-8">
-                    <img class="alert-icon" src="@/assets/icons/alert-white.svg" />
-                    <h4 class="weight-bold spacing-medium">
-                      Sorry, the sales has ended and it looks like you were not distributed allocation this time.
-                    </h4>
-                  </div>
-                </div>
-                <!-- <div v-else-if="currentStatus.funded" class="text-center"> 
-                  <h4 class="weight-bold spacing-medium">The {{ fertilizer.title }} public sale has finished!</h4> 
-                  <div class="distribution-details"> 
-                    <span class="font-medium"> 
-                      Sonar Watch raised: 
-                      <br /> 
-                      <b>500,000 / 500,000 {{ fertilizer.token_price }}</b> 
-                    </span> 
-                    <div class="sale-details-group fcc-container"> 
-                      <div class="sale-detail-card text-left"> 
-                        <span class="font-xsmall">ROI (ATH)</span> 
-                        <br /> 
-                        <span class="font-large weight-bold">8.20x</span> 
-                      </div> 
-                      <div class="sale-detail-card text-left"> 
-                        <span class="font-xsmall">ROI (current)</span> 
-                        <br /> 
-                        <span class="font-large weight-bold">1.07x</span> 
-                      </div> 
-                      <div class="sale-detail-card text-left"> 
-                        <span class="font-xsmall">Last Price</span> 
-                        <br /> 
-                        <span class="font-large weight-bold">0.21 {{ fertilizer.token_price }}</span> 
-                      </div> 
-                    </div> 
-                    <div class="btn-container m-auto"> 
-                      <Button class="btn-transparent font-medium weight-semi icon-cursor">Start Farming</Button> 
-                    </div> 
-                  </div> 
-                </div> -->
+                          <div class="state">
+                            <span class="label font-small weight-bold">Investors</span>
+                            <span class="font-medium weight-semi">{{ fertilizer.investors }}</span>
+                          </div>
+                        </div>
+                      </Col>
+
+                      <Col :span="24">
+                        <div class="fcsb-container">
+                          <div class="state">
+                            <span class="label font-small weight-bold">Token price</span>
+                            <span class="font-medium weight-semi spacing-small"
+                              >${{ new TokenAmount(fertilizer.token_price, 3, false).format() }}</span
+                            >
+                          </div>
+
+                          <div class="state">
+                            <span class="label font-small weight-bold">ATH Since IDO</span>
+                            <div class="project-ath fcc-container">
+                              <Tooltip placement="bottomLeft">
+                                <template slot="title">
+                                  <span class="font-small weight-semi">If you invested 100$ you would have 1000$</span>
+                                </template>
+                                <div class="info-icon">
+                                  <img src="@/assets/icons/info.svg" />
+                                </div>
+                              </Tooltip>
+                              <span class="value font-medium weight-semi spacing-small">+{{ fertilizer.ath }}%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </Col>
+
+                      <Col :span="24">
+                        <div class="fcsb-container">
+                          <div class="state" span="5">
+                            <span class="label font-small weight-bold">Ended in UTC</span>
+                            <span class="font-medium weight-semi">{{
+                              moment(fertilizer.distribution_end_date).format('MMMM Do YYYY')
+                            }}</span>
+                          </div>
+                        </div>
+                      </Col>
+
+                      <Col class="btn-group" :span="24">
+                        <div class="btn-group-item fcc-container">
+                          <div class="btn-container">
+                            <Button @click="goToProject(fertilizer)" class="btn-primary font-small weight-bold">
+                              See project
+                            </Button>
+                          </div>
+
+                          <div class="btn-container">
+                            <Button class="btn-primary font-small weight-bold"> Stake </Button>
+                          </div>
+
+                          <div class="btn-container">
+                            <Button class="btn-primary font-small weight-bold"> Swap </Button>
+                          </div>
+                        </div>
+
+                        <div class="btn-group-item fcc-container">
+                          <a
+                            class="social-link fcc-container font-xsmall weight-semi icon-cursor"
+                            href="#"
+                            target="_blank"
+                          >
+                            Share
+                            <img class="social-icon" src="@/assets/icons/share.svg" />
+                          </a>
+                          <a
+                            class="social-link fcc-container font-xsmall weight-semi icon-cursor"
+                            href="#"
+                            target="_blank"
+                          >
+                            Twitter
+                            <img class="social-icon" src="@/assets/icons/twitter-white.svg" />
+                          </a>
+                        </div>
+                      </Col>
+                    </Row>
+                  </CollapsePanel>
+                </Collapse>
               </div>
             </div>
-
-            <!---------------------------------Whitepaper Edit------------------------------------------------------------------->
-
-            <!-- <div class="project-detail-static banner fcsb-container" v-if="currentTier < 5"> 
-              <div class="project-detail-stake"> 
-                <h4 class="weight-semi"> 
-                  About NeoNomad Finance. 
-                </h4> 
-                 <h10 class="weight-semi"> 
-                  Developed by Nomads, for Nomads. Unbound by time and place, NeoNomad bridges the gap between CeFi and DeFi. The future is a parallel economy. 
-                 </h10> 
-                   <h9 class="weight-semi"> 
-                  NeoNomad is the world's first innovative cryptocurrency ecosystem that combines  
-                  several services for a more financially inclusive world. By incorporating a decentralized exchange,  
-                  NomadPay, and an NFT marketplace that ties digital art to real-world assets, NeoNomad sets itself apart from  
-                  competitors in the DeFi space by offering a diverse array of services to enable users to reach their financial goals as they desire.  
-                 </h9> 
-                <div class="btn-container anchor"> 
-                  <a class="btn-transparent anchor font-medium weight-semi icon-cursor" 
-                    href="https://docs.neonomad.finance/tokenomics-fundamentals/whitepaper"> 
-                    Whitepaper 
-                  </a> 
-                </div> 
-              </div> 
-              <img class="farmer-img isDesktop" src="@/assets/background/NNI_MOON.png" /> 
-              <img class="farmer-img isTablet" src="@/assets/background/NNI_MOON.png" /> 
-            </div>  -->
-
-            <!---------------------------------Killerpoe's Edit------------------------------------------------------------------->
-
-            <!-- <div class="project-detail-static banner fcsb-container" v-if="currentTier < 5"> 
-              <div class="project-detail-stake"> 
-            <div data-v-1354f7d8="" class="project-detail-static transparent"> 
-               <h3 data-v-1354f7d8="" class="project-category-title weight-semi">Project Details</h3> 
-                <div data-v-1354f7d8="" class="ant-row" style="margin: -10px -20px;"> 
-                  <div data-v-1354f7d8="" class="ant-col ant-col-xs-24 ant-col-sm-24 ant-col-md-12" style="padding: 10px 20px;"> 
-                     <span data-v-1354f7d8="" class="font-large weight-bold">IDO Information</span>  
-            <div data-v-1354f7d8="" class="information"> 
-            <div data-v-1354f7d8="" class="information-item fcsb-container"><span data-v-1354f7d8="" class="label font-small weight-semi spacing-large">Sale type</span> <span data-v-1354f7d8="" class="font-xsmall weight-semi spacing-small text-right"><label class="font-medium">Public:</label> 100% unlock</span></div> 
-            <div data-v-1354f7d8="" class="information-item fcsb-container"><span data-v-1354f7d8="" class="label font-small weight-semi spacing-large">Whitelist Start Date</span> <span data-v-1354f7d8="" class="font-medium weight-semi spacing-small text-right">Mar 28, 2022-0:00 AM UTC</span></div> 
-            <div data-v-1354f7d8="" class="information-item fcsb-container"><span data-v-1354f7d8="" class="label font-small weight-semi spacing-large">Whitelist Ends Date</span> <span data-v-1354f7d8="" class="font-medium weight-semi spacing-small text-right">Mar 4, 2022-0:00 AM UTC</span></div> 
-            <div data-v-1354f7d8="" class="information-item fcsb-container"><span data-v-1354f7d8="" class="label font-small weight-semi spacing-large">Sale Starts Date</span> <span data-v-1354f7d8="" class="font-medium weight-semi spacing-small text-right">Mar 31, 2022-4:00 PM UTC</span></div> 
-            <div data-v-1354f7d8="" class="information-item fcsb-container"><span data-v-1354f7d8="" class="label font-small weight-semi spacing-large">Sale Ends Date</span> <span data-v-1354f7d8="" class="font-medium weight-semi spacing-small text-right">Apr 3, 2022-4:00 PM UTC</span></div> 
-            <div data-v-1354f7d8="" class="information-item fcsb-container"><span data-v-1354f7d8="" class="label font-small weight-semi spacing-large">Token Generation Event (TGE)</span> <span data-v-1354f7d8="" class="font-medium weight-semi spacing-small text-right">Apr 6, 2022-10:00 AM UTC</span></div> 
-            <div data-v-1354f7d8="" class="information-item fcsb-container"><span data-v-1354f7d8="" class="label font-small weight-semi spacing-large">Farm Opens</span> <span data-v-1354f7d8="" class="font-medium weight-semi spacing-small text-right">Apr 14, 2022-11:00 AM UTC</span></div> 
-         </div> 
-      </div> 
-      <div data-v-1354f7d8="" class="ant-col ant-col-xs-24 ant-col-sm-24 ant-col-md-12" style="padding: 10px 20px;"> 
-         <span data-v-1354f7d8="" class="font-large weight-bold">Tokenomics</span>  
-         <div data-v-1354f7d8="" class="information"> 
-            <div data-v-1354f7d8="" class="information-item fcsb-container"><span data-v-1354f7d8="" class="label font-small weight-semi spacing-large">Hardcap</span> <span data-v-1354f7d8="" class="font-medium weight-semi spacing-small">198,000 USDC</span></div> 
-            <div data-v-1354f7d8="" class="information-item fcsb-container"><span data-v-1354f7d8="" class="label font-small weight-semi spacing-large">Token Price</span> <span data-v-1354f7d8="" class="font-medium weight-semi spacing-small">0.045 USDC</span></div> 
-            <div data-v-1354f7d8="" class="information-item fcsb-container"><span data-v-1354f7d8="" class="label font-small weight-semi spacing-large">Initial Marketcap</span> <span data-v-1354f7d8="" class="font-medium weight-semi spacing-small">248,000</span></div> 
-            <div data-v-1354f7d8="" class="information-item fcsb-container"><span data-v-1354f7d8="" class="label font-small weight-semi spacing-large">Initial Circulation Supply</span> <span data-v-1354f7d8="" class="font-medium weight-semi spacing-small">5,511,111</span></div> 
-            <div data-v-1354f7d8="" class="information-item fcsb-container"><span data-v-1354f7d8="" class="label font-small weight-semi spacing-large">Total Circulation Supply</span> <span data-v-1354f7d8="" class="font-medium weight-semi spacing-small">200,000,000</span></div> 
-            <div data-v-1354f7d8="" class="information-item fcsb-container"><span data-v-1354f7d8="" class="label font-small weight-semi spacing-large">Symbol</span> <span data-v-1354f7d8="" class="font-medium weight-semi spacing-small">NNI</span></div> 
-            <div data-v-1354f7d8="" class="information-item fcsb-container"><span data-v-1354f7d8="" class="label font-small weight-semi spacing-large">Category</span> <span data-v-1354f7d8="" class="font-medium weight-semi spacing-small">DeFi, NFT's, Farming</span></div>    
-         </div> 
-      </div> 
-   </div> 
-</div> 
-  </div> 
-              </div> -->
-
-            <!---------------------------------------------------------------------------------------------------->
-
-            <div class="pds" v-html="fertilizer.longContent"></div>
           </div>
+
+          <!-- <div v-if="initialized"></div>
+
+        <div v-else class="fcc-container">
+          <Spin :spinning="true">
+            <Icon slot="indicator" type="loading" style="font-size: 24px" spin />
+          </Spin>
+        </div> -->
         </div>
       </div>
     </div>
@@ -993,188 +903,184 @@
 <script lang="ts">
 import Vue from 'vue'
 import { mapState } from 'vuex'
-import { Row, Col, Statistic, Steps } from 'ant-design-vue'
+import importIcon from '@/utils/import-icon'
+import { Collapse, Row, Col, Pagination, Button, Statistic, Tooltip } from 'ant-design-vue'
+import { get, cloneDeep } from 'lodash-es'
+import { TokenAmount } from '@/utils/safe-math'
+import { getUnixTs } from '@/utils'
+import moment from 'moment'
+import { TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token'
+import { TOKENS, NATIVE_SOL, getTokenByMintAddress } from '@/utils/tokens'
 import {
   setAnchorProvider,
   getLaunchpad,
   getProjectFormatted,
-  subscribeToWhitelist,
-  buyTokens,
-  claimTokens,
-  LaunchpadProgram,
   getAllProjects,
-  getUser
+  LaunchpadProgram
 } from '@/utils/crp-launchpad'
-import { TOKENS, NATIVE_SOL, getTokenByMintAddress } from '@/utils/tokens'
-import moment from 'moment'
+import { initialize } from '@/utils/market'
+import { getMintDecimals } from '@/utils/web3'
 import { PublicKey } from '@solana/web3.js'
-import { get } from 'lodash-es'
-import { checkWalletATA, getMintDecimals } from '@/utils/web3'
-import { LAUNCHPAD_PROGRAM_ID, sss } from '@/utils/ids'
+const Vco = require('v-click-outside')
+Vue.use(Vco)
+const CollapsePanel = Collapse.Panel
 const Countdown = Statistic.Countdown
-const Step = Steps.Step
-const TEST_TIME = 1643356116915
-const countries = require('i18n-iso-countries')
-// 1643500800000
 
 export default Vue.extend({
-  async asyncData({ params, redirect }) {
-    return {
-      project: null as any
-    }
-  },
-
+  // async asyncData({ redirect }) {
+  //   redirect('/nomadpad/_project')
+  // },
   components: {
+    // Spin,
+    // Icon,
+    Collapse,
+    CollapsePanel,
     Row,
     Col,
+    Button,
     Countdown,
-    Steps,
-    Step
+    Tooltip
   },
-
   data() {
     return {
-      total_tickets: 0,
-      userRegistered: false,
-      fertilizer: {
-        picture: '',
-        logo: '',
-        longContent: '',
-        title: '',
-        short_desc: '',
-        price_token: '',
-        price_token_mint: '',
-        long_desc: 'Connecting to the Solana Network... Please wait',
-        hard_cap: '198K',
-        pool_size: 4400000 as any,
-        subscribers: 'Pending' as any,
-        website: 'NeoNomad Finance',
-        website_url: 'https://neonomad.exchange',
-        mint: '',
-        tw_a: 'https://twitter.com/NeoNomadFinance',
-        tw_b: '',
-        tg_a: 'https://t.me/NeoNomadFinance',
-        tg_b: '',
-        retweetlink: 'https://twitter.com',
-        ido_info: {
-          hard_cap: 0,
-          sale_rate: 0 as any,
-          sale_type: ''
-        },
-        token_info: {
-          symbol: ''
-        },
-        whitelist_start_date: 0 as any,
-        whitelist_end_date: 0 as any,
-        sales_start_date: 0 as any,
-        sales_end_date: 0 as any,
-        distribution_start_date: 0 as any,
-        distribution_end_date: 0 as any,
-        date_preparation: 0 as any,
-        decimals_mint: 0 as any,
-        decimals_sale: 0 as any
-      },
-      projectStatus: {
-        preparation: 'Preparation',
+      searchName: '',
+      coinPicUrl: '',
+      initialized: false as boolean,
+      labelizedAmms: {} as any,
+      currentPage: 1,
+      coinName: '',
+      mintAddress: '',
+      poolLoaded: false,
+      autoRefreshTime: 60 as number,
+      countdown: 0,
+      showCollapse: [] as any[],
+      timer: null as any,
+      loading: false as boolean,
+      nbFarmsLoaded: 0 as number,
+      poolType: true as boolean,
+      TVL: 0,
+      activeSpinning: false as boolean,
+      showTabMenu: false as boolean,
+      showSearchMenu: false as boolean,
+      showFilterMenu: false as boolean,
+      showMoreMenu: [] as boolean[],
+      currentShowMore: -1 as number,
+      sortUpcoming: 'All' as string,
+      sortFunded: 'Investors' as string,
+      sortAsc: false as boolean,
+      filterOptions: {
+        all: 'All',
         whitelist: 'Whitelist Open',
         sales: 'Sales',
-        open: 'Open Sales',
-        distribution: 'Distribution'
+        distribution: 'Distribution',
+        upcoming: 'Upcoming',
+        preparation: 'Preparation',
+        funded: 'Funded'
       },
-      currentStatus: {
-        steps: 'process' as string,
-        funded: false as boolean,
-        win: false as boolean,
-        subscribe: false as boolean
+      registerdList: {},
+      sortOptions: {
+        investors: 'Investors',
+        total_raised: 'Total raise',
+        token_price: 'Token price',
+        ath: 'ATH Since IDO',
+        end_date: 'Ended in UTC'
       },
-      referal: '' as string,
-      socialTicket: {
-        telegram: 0 as number,
-        twitter: 0 as number
-      },
-      SubscribeModalContent: '' as string,
-      currentTimestamp: 0 as any,
-      currentStep: 0 as number,
-      currentTier: 0 as number,
-      affiliatedLink: '' as string,
-      twitterShareLink: '' as string,
-      telegramShareLink: '' as string,
-      subscribeShow: false as boolean,
-      taskModalShow: false as boolean,
-      taskModalType: 0 as number,
-      KYCStatus: {
-        step: 3 as number,
-        verification: 0 as number,
-        userVerified: true as boolean,
-        sessionID: '' as string
-      },
-      KYCModalShow: false as boolean,
-      copyNotification: false as boolean,
-      timer: null as any,
-
-      social_tickets: 0,
-      referral_tickets: 0,
-      buyAmount: 0,
-      userPaidAmount: '1000',
-      userAllocation: '0',
-      maxAmount: 1500
+      filterProject: 'Upcoming' as string,
+      fertilizerItems: [] as any[],
+      projects: [] as any,
+      fertilizerData: [] as any,
+      currentTimestamp: 0
     }
   },
-
   head: {
-    title: 'NeoNomad Finance - Nomadpad'
+    title: 'Fertilizer'
   },
-
   computed: {
     ...mapState(['app', 'wallet', 'farm', 'url', 'price', 'liquidity'])
   },
+  async mounted() {
+    this.getTvl()
+    this.initialize()
+  },
 
   watch: {
-    'wallet.address': {
-      handler(newTokenAccounts: any) {
-        this.loadDatas()
+    showCollapse: {
+      immediate: true,
+      handler() {
+        // if (this.showCollapse.length > 0) {
+        //   this.showCollapse.splice(0, this.showCollapse.length)
+        // }
+      },
+      deep: true
+    },
+    searchName: {
+      handler(newSearchName: string) {
+        this.filterFertilizer(newSearchName, this.filterProject)
+      },
+      deep: true
+    },
+    filterProject: {
+      handler(newFilterProject: string) {
+        this.sortUpcoming = this.filterOptions.all
+        this.sortFunded = this.sortOptions.investors
+        this.sortAsc = false
+        this.showFilterMenu = false
+        this.filterFertilizer(this.searchName, newFilterProject)
       },
       deep: true
     },
     'wallet.connected': {
       handler(connected: any) {
-        setAnchorProvider(this.$web3, this.$wallet)
-        this.getProjectData().then((project) => {
-          if (project) {
-            //@ts-ignore
-            this.project = project
-            //@ts-ignore
-            this.fertilizer.mint = this.project.mint
-
-            this.currentTimestamp = moment().valueOf()
-            this.loadDatas()
-          }
-        })
+        if (connected) {
+          this.initialize()
+        }
       },
       deep: true
     }
   },
+  methods: {
+    importIcon,
+    TokenAmount,
+    async getTvl() {
+      let cur_date = new Date().getTime()
+      if (window.localStorage.TVL_last_updated) {
+        const last_updated = parseInt(window.localStorage.TVL_last_updated)
+        if (cur_date - last_updated <= 600000) {
+          this.TVL = window.localStorage.TVL
+          return
+        }
+      }
 
-  async mounted() {
-    setAnchorProvider(this.$web3, this.$wallet)
+      let responseData: any = []
+      let tvl = 0
+      this.TVL = Math.round(tvl)
 
-    const project = await this.getProjectData()
-    if (project) {
-      //@ts-ignore
-      this.project = project
-      //@ts-ignore
-      this.fertilizer.mint = this.project.mint
+      window.localStorage.TVL_last_updated = new Date().getTime()
+      window.localStorage.TVL = this.TVL
+    },
+    async initialize() {
+      setAnchorProvider(this.$web3, this.$wallet)
+
+      this.$accessor.token.loadTokens()
+
+      let timer = setInterval(async () => {
+        if (this.nbFarmsLoaded == Object.keys(this.labelizedAmms).length) {
+          this.initialized = true
+        }
+      }, 1000)
+
+      this.timer = setInterval(async () => {
+        clearInterval(this.timer)
+        this.setTimer()
+      }, 1000)
+
+      await this.constructFertilizerData()
 
       this.currentTimestamp = moment().valueOf()
-      this.loadDatas()
-    }
-  },
-
-  methods: {
-    moment() {
-      return moment()
+      this.updateFertilizer()
     },
-    async getProjectData() {
+
+    async constructFertilizerData() {
       // let registerdList
       // try {
       //   registerdList = await fetch('https://flow.cropper.finance/registers/').then((res) => res.json())
@@ -1191,18 +1097,18 @@ export default Vue.extend({
       } finally {
       }
 
+      this.fertilizerData = []
       let key = 0
       console.log('responseData', responseData)
       for (const item of responseData) {
         let project = {
           status: 'Whitelist Open',
           key: 'k' + key,
-          picture: 'picture',
+          picture: '/Crypto_Nomad_Logo_-_White.svg',
           title: 'NeoNomad Finance',
-          short_desc:
-            'NeoNomad provides an all-in-one integrated ecosystem, including a decentralized exchange, integrated payment services, a Launchpad, DeFi products and an NFT marketplace to make decentralized finance accessible to all.',
+          short_desc: '',
           slug: 'neo_namad',
-          hard_cap: '198K',
+          hard_cap: '198000',
           subscribers: 0,
           mint: item.account.projectMint.toBase58(),
           whitelist_end_date: 1643500800000,
@@ -1214,17 +1120,13 @@ export default Vue.extend({
           sales_start_date: 0,
           token_price: 0,
           price_token: '',
-          price_token_mint: '',
-          decimals_mint: 0,
-          decimals_sale: 0
+          price_token_mint: ''
         }
 
         let scValues: any = await getProjectFormatted(item.account.projectMint.toBase58())
 
         const decimals_mint = await getMintDecimals(LaunchpadProgram.provider.connection, item.account.projectMint)
         const decimals_sale = await getMintDecimals(LaunchpadProgram.provider.connection, item.account.saleMint)
-        project.decimals_mint = decimals_mint
-        project.decimals_sale = decimals_sale
         if (decimals_mint != undefined && decimals_sale != undefined) {
           const amp_mint = Math.pow(10, decimals_mint)
           const amp_sale = Math.pow(10, decimals_sale)
@@ -1277,349 +1179,182 @@ export default Vue.extend({
         }
 
         key++
-        return project
-      }
-      return null
-    },
-    checkCurrentStep() {
-      if (this.currentStep === 0 && this.currentTimestamp > this.fertilizer.whitelist_start_date) this.currentStep = 1
-      if (this.currentStep === 1 && this.currentTimestamp > this.fertilizer.whitelist_end_date) this.currentStep = 2
-      if (this.currentStep === 2 && this.currentTimestamp > this.fertilizer.distribution_start_date)
-        this.currentStep = 3
-
-      //@ts-ignore
-      if (this.project.closed) currentStatus.funded = 1
-    },
-    goBack() {
-      window.location.href = 'https://www.neonomad.finance/'
-      // this.$router.push({
-      //   path: 'https://neonomad.finance'
-      // })
-    },
-
-    async onClaimTokens() {
-      console.log('LAUNCHPAD_PROGRAM_ID', sss)
-      if (this.wallet.connected) {
-        let projectTokenAccount = get(this.wallet.tokenAccounts, `${this.fertilizer.mint}.tokenAccountAddress`)
-        if (projectTokenAccount) {
-          projectTokenAccount = new PublicKey(projectTokenAccount)
-        } else {
-          projectTokenAccount = await checkWalletATA(
-            this.fertilizer.mint,
-            LaunchpadProgram.provider.connection,
-            LaunchpadProgram.provider.wallet.publicKey
-          )
-        }
-        let res = await claimTokens(new PublicKey(this.fertilizer.mint), projectTokenAccount)
-        if (res.success) {
-          const amount = (res.amount / Math.pow(10, this.fertilizer.decimals_mint)).toFixed(
-            this.fertilizer.decimals_mint
-          )
-          this.$notify.success({
-            message: `Claim Succeed. ${amount} received`,
-            description: 'Transaction Succeed'
-          })
-        } else {
-          this.$notify.error({
-            message: 'Claim Failed',
-            description: 'Transaction Failed'
-          })
-        }
+        this.fertilizerData.push(project)
       }
     },
 
-    async onClickBuyNow() {
-      if (!this.wallet.connected) {
-        console.log('wallet not connected!')
-        return
-      }
-      let priceTokenAccount = get(this.wallet.tokenAccounts, `${this.fertilizer.price_token_mint}.tokenAccountAddress`)
-      if (priceTokenAccount) {
-        priceTokenAccount = new PublicKey(priceTokenAccount)
-      } else {
-        priceTokenAccount = await checkWalletATA(
-          this.fertilizer.price_token_mint,
-          LaunchpadProgram.provider.connection,
-          LaunchpadProgram.provider.wallet.publicKey
-        )
-      }
-      const decimals_sale = await getMintDecimals(
-        LaunchpadProgram.provider.connection,
-        new PublicKey(this.fertilizer.price_token_mint)
-      )
-      const amp_sale = Math.pow(10, decimals_sale)
-      const buyAmount = this.buyAmount * amp_sale
-      let res = await buyTokens(
-        new PublicKey(this.fertilizer.mint),
-        new PublicKey(this.fertilizer.price_token_mint),
-        priceTokenAccount,
-        buyAmount
-      )
-      if (res.success) {
-        this.$notify.success({
-          message: 'Buy Succeed',
-          description: 'Transaction Succeed'
-        })
-      } else {
-        this.$notify.error({
-          message: 'Buy Failed',
-          description: 'Transaction Failed'
-        })
-      }
-      console.log('buyAmount =', this.buyAmount)
+    async flush() {
+      clearInterval(this.timer)
+      this.poolLoaded = true
+      this.countdown = 0
+      this.setTimer()
     },
-
-    async initSubscribe() {
-      if (!this.$wallet?.connected) {
-        console.log('wallet not connected')
-        return
-      }
-      setAnchorProvider(this.$web3, this.$wallet)
-      await this.contextualizeUser()
-      if (this.userRegistered) {
-        this.$notify.success({
-          message: 'Already subscribed',
-          description: 'Not allowed double subscriptions'
-        })
-        return
-      }
-
-      let projectTokenAccount = get(this.wallet.tokenAccounts, `${this.fertilizer.mint}.tokenAccountAddress`)
-      if (projectTokenAccount) {
-        projectTokenAccount = new PublicKey(projectTokenAccount)
-      } else {
-        projectTokenAccount = await checkWalletATA(
-          this.fertilizer.mint,
-          LaunchpadProgram.provider.connection,
-          LaunchpadProgram.provider.wallet.publicKey
-        )
-      }
-      console.log('this.fertilizer.mint', this.fertilizer.mint)
-      console.log('projectTokenAccount', projectTokenAccount)
-      let res = await subscribeToWhitelist(new PublicKey(this.fertilizer.mint), projectTokenAccount)
-      console.log(res)
-      if (res.success) {
-        let body = {
-          spl: this.wallet.address,
-          mint: this.fertilizer.mint,
-          tx_id_register: res.txId
-        }
-
-        if (this.referal) {
-          //@ts-ignore
-          body.referer = this.referal
-        }
-
-        await this.contextualizeUser()
-        this.currentStatus.subscribe = true
-        this.$notify.success({
-          message: 'Subscribe Succeed',
-          description: 'Transaction Succeed'
-        })
-      } else {
-        this.$notify.error({
-          message: 'Subscribe Failed',
-          description: 'Transaction Failed'
-        })
-      }
-    },
-
-    async contextualizeUser() {
-      if (!this.wallet.connected) {
-        return
-      }
-      try {
-        const userData = await getUser(new PublicKey(this.fertilizer.mint))
-        if (userData) {
-          this.userRegistered = true
-          this.userPaidAmount = (
-            (userData.paidAmount.toNumber() - userData.claimedAmount.toNumber()) /
-            Math.pow(10, this.fertilizer.decimals_sale)
-          ).toFixed(this.fertilizer.decimals_sale)
-          this.userAllocation = (
-            (userData.paidAmount.toNumber() - userData.claimedAmount.toNumber()) /
-            Math.pow(10, this.fertilizer.decimals_sale) /
-            this.fertilizer.ido_info.sale_rate
-          ).toFixed(this.fertilizer.decimals_mint)
-        } else {
-          this.userPaidAmount = '0'
-          this.userRegistered = false
-          this.userAllocation = '0'
-        }
-      } catch (e) {
-        console.log(e)
-      }
-    },
-
     async delay(ms: number) {
       return new Promise((resolve) => setTimeout(resolve, ms))
     },
-
-    async loadDatas() {
-      let responseData = {} as any
-
-      //@ts-ignore
-      let item = this.project
-
-      this.currentTimestamp = moment().valueOf()
-
-      var curdate = new Date()
-      this.fertilizer.short_desc = item['short_desc']
-      this.fertilizer.long_desc = item['short_desc_2']
-      this.fertilizer.title = item['title']
-      this.fertilizer.tg_a = item['tg_a']
-      this.fertilizer.tg_b = item['tg_b']
-      this.fertilizer.tw_a = item['twitter_a']
-      this.fertilizer.tw_b = item['twitter_b']
-
-      const titleEl = document.querySelector('head title')
-      //@ts-ignore
-      titleEl?.textContent = 'NeoNomad Finance - Nomadpad'
-      const descEl = document.querySelector('head meta[name="description"]')
-      descEl?.setAttribute('content', item['seo_desc_meta'])
-      const descEl2 = document.querySelector('head meta[name="og:description"]')
-      descEl2?.setAttribute('content', item['seo_desc_meta'])
-
-      this.fertilizer.retweetlink = item['post_a']
-      this.SubscribeModalContent = item['disclaimer']
-      this.fertilizer.website_url = item.website_display
-      this.fertilizer.website = item.website_url
-      this.fertilizer.logo = '/Crypto_Nomad_Logo_-_White.svg'
-
-      let scValues: any = await getProjectFormatted(this.fertilizer.mint)
-      if (!scValues) {
-        this.$router.push({
-          path: '/launchpad/'
-        })
-      }
-      const decimals_mint = item.decimals_mint
-      const decimals_sale = item.decimals_sale
-      this.fertilizer.decimals_mint = decimals_mint
-      this.fertilizer.decimals_sale = decimals_sale
-      if (decimals_mint != undefined && decimals_sale != undefined) {
-        const amp_mint = Math.pow(10, decimals_mint)
-        const amp_sale = Math.pow(10, decimals_sale)
-        scValues.total_deposit_amount /= amp_mint
-        scValues.total_paid_amount /= amp_sale
-        scValues.total_claimed_amount /= amp_mint
-      }
-      const ido_hard_cap = scValues.total_deposit_amount * scValues.token_price
-
-      this.fertilizer.distribution_end_date = (moment(scValues.date_distribution).unix() + 86400 * 2) * 1000
-      this.fertilizer.distribution_start_date = moment(scValues.date_distribution).unix() * 1000
-      this.fertilizer.date_preparation = moment(scValues.date_preparation).unix() * 1000
-      this.fertilizer.sales_end_date = moment(scValues.date_sale_end).unix() * 1000
-      this.fertilizer.sales_start_date = moment(scValues.date_sale_start).unix() * 1000
-      this.fertilizer.whitelist_end_date = moment(scValues.date_whitelist_end).unix() * 1000
-      this.fertilizer.whitelist_start_date = moment(scValues.date_whitelist_start).unix() * 1000
-      this.fertilizer.ido_info.sale_rate = scValues.token_price
-      this.fertilizer.ido_info.hard_cap = ido_hard_cap
-      this.fertilizer.ido_info.sale_type = item.type
-
-      this.checkCurrentStep()
-      if (scValues.token_price != undefined && scValues.token_price > 0) {
-        this.fertilizer.pool_size = scValues.total_deposit_amount
-      }
-
-      let token = getTokenByMintAddress(scValues.price_token_mint)
-
-      if (token) {
-        this.fertilizer.price_token = token.symbol
-        this.fertilizer.price_token_mint = scValues.price_token_mint
-      }
-
-      token = getTokenByMintAddress(this.fertilizer.mint)
-      if (token) {
-        this.fertilizer.token_info.symbol = token.symbol
-      }
-
-      this.contextualizeUser()
-    },
-
-    copyToClipboard() {
-      var textField = document.createElement('textarea')
-      textField.innerText = this.affiliatedLink
-      document.body.appendChild(textField)
-      textField.select()
-      document.execCommand('copy')
-      textField.remove()
-      this.copyNotification = true
-      setTimeout(() => {
-        this.copyNotification = false
-      }, 3000)
-    },
-
-    dataURLtoFile(dataurl: any, filename: any) {
-      var arr = dataurl.split(','),
-        mime = arr[0].match(/:(.*?);/)[1],
-        bstr = atob(arr[1]),
-        n = bstr.length,
-        u8arr = new Uint8Array(n)
-
-      while (n--) {
-        u8arr[n] = bstr.charCodeAt(n)
-      }
-
-      return new File([u8arr], filename + '.jpg', { type: mime })
-    },
-
-    async sendKYC(driver: any, id: any, passport: any, selectedCountry: any, imgUrl: any) {
-      var myHeaders = new Headers()
-      myHeaders.append('Session-Id', this.KYCStatus.sessionID)
-
-      var formdata = new FormData()
-      formdata.append('document_type', driver ? 'DRIVER_LICENSE' : id ? 'NATIONAL_ID' : 'PASSPORT')
-      formdata.append('country', countries.alpha2ToAlpha3(selectedCountry))
-
-      if (imgUrl.back) {
-        formdata.append('back_document', imgUrl.backfiles, 'Front.png')
-      }
-
-      if (imgUrl.front) {
-        formdata.append('front_document', imgUrl.frontfiles, 'Front.png')
-      }
-
-      var requestOptions = {
-        method: 'POST',
-        headers: myHeaders,
-        body: formdata
-      }
-
-      let rest = await fetch(
-        'https://individual-api.synaps.io/v3/identity/submit?step_id=1909259753480',
-        requestOptions
-      )
-        .then((response) => response.text())
-        .then((result) => {
-          if (JSON.parse(result).api_code == 'WORKFLOW_STEP_UPLOADED') {
-            var requestOptions2 = {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ session_id: this.KYCStatus.sessionID })
+    setTimer() {
+      this.timer = setInterval(async () => {
+        if (!this.loading) {
+          if (this.countdown < this.autoRefreshTime) {
+            this.countdown += 1
+            if (this.countdown === this.autoRefreshTime) {
+              await this.flush()
             }
-            fetch('https://flow.cropper.finance/kyc/init/', requestOptions2)
-
-            this.contextualizeUser()
-
-            this.KYCModalShow = false
-          } else {
-            alert(JSON.parse(result).message)
           }
-        })
-        .catch((error) => console.log('error', error))
+        }
+      }, 1000)
     },
+    reloadTimer() {
+      this.flush()
+      this.$accessor.wallet.getTokenAccounts()
+      this.activeSpinning = true
+      setTimeout(() => {
+        this.activeSpinning = false
+      }, 1000)
+    },
+    updateFertilizer() {
+      this.filterFertilizer(this.searchName, this.filterProject)
+    },
+    filterFertilizer(searchName: string, filterProject: string) {
+      // filter with tabs
+      if (filterProject === this.filterOptions.upcoming) {
+        this.fertilizerItems = this.fertilizerData.filter(
+          (fertilizer: any) => fertilizer.status != this.filterOptions.funded
+        )
 
-    KYCConfirm() {
-      if (this.KYCStatus.step === 1 || (this.KYCStatus.step === 2 && this.KYCStatus.verification === 0))
-        this.KYCModalShow = true
-      else if (this.KYCStatus.step === 2 && this.KYCStatus.verification === 2) {
-        this.KYCStatus.step = 3
-        this.KYCStatus.userVerified = true
+        // sort by status on Upcoming Projects
+        if (this.sortUpcoming === this.filterOptions.all) {
+          this.fertilizerItems = this.fertilizerItems.filter(
+            (fertilizer: any) => fertilizer.status != this.filterOptions.funded
+          )
+        } else if (this.sortUpcoming === this.filterOptions.whitelist) {
+          this.fertilizerItems = this.fertilizerItems.filter(
+            (fertilizer: any) => fertilizer.status === this.filterOptions.whitelist
+          )
+        } else if (this.sortUpcoming === this.filterOptions.sales) {
+          this.fertilizerItems = this.fertilizerItems.filter(
+            (fertilizer: any) => fertilizer.status === this.filterOptions.sales
+          )
+        } else if (this.sortUpcoming === this.filterOptions.distribution) {
+          this.fertilizerItems = this.fertilizerItems.filter(
+            (fertilizer: any) => fertilizer.status === this.filterOptions.distribution
+          )
+        } else if (this.sortUpcoming === this.filterOptions.preparation) {
+          this.fertilizerItems = this.fertilizerItems.filter(
+            (fertilizer: any) => fertilizer.status === this.filterOptions.preparation
+          )
+        }
+      } else {
+        this.fertilizerItems = this.fertilizerData.filter(
+          (fertilizer: any) => fertilizer.status === this.filterOptions.funded
+        )
+
+        // sort by column on Funded projects
+        if (this.sortAsc) {
+          if (this.sortFunded == this.sortOptions.investors) {
+            this.fertilizerItems = this.fertilizerItems.sort((a: any, b: any) => b.investors - a.investors)
+          } else if (this.sortFunded == this.sortOptions.total_raised) {
+            this.fertilizerItems = this.fertilizerItems.sort((a: any, b: any) => b.hard_cap - a.hard_cap)
+          } else if (this.sortFunded == this.sortOptions.token_price) {
+            this.fertilizerItems = this.fertilizerItems.sort((a: any, b: any) => b.token_price - a.token_price)
+          } else if (this.sortFunded == this.sortOptions.ath) {
+            this.fertilizerItems = this.fertilizerItems.sort((a: any, b: any) => b.ath - a.ath)
+          } else if (this.sortFunded == this.sortOptions.end_date) {
+            this.fertilizerItems = this.fertilizerItems.sort(
+              (a: any, b: any) => b.distribution_end_date - a.distribution_end_date
+            )
+          }
+        } else {
+          if (this.sortFunded == this.sortOptions.investors) {
+            this.fertilizerItems = this.fertilizerItems.sort((a: any, b: any) => a.investors - b.investors)
+          } else if (this.sortFunded == this.sortOptions.total_raised) {
+            this.fertilizerItems = this.fertilizerItems.sort((a: any, b: any) => a.hard_cap - b.hard_cap)
+          } else if (this.sortFunded == this.sortOptions.token_price) {
+            this.fertilizerItems = this.fertilizerItems.sort((a: any, b: any) => a.token_price - b.token_price)
+          } else if (this.sortFunded == this.sortOptions.ath) {
+            this.fertilizerItems = this.fertilizerItems.sort((a: any, b: any) => a.ath - b.ath)
+          } else if (this.sortFunded == this.sortOptions.end_date) {
+            this.fertilizerItems = this.fertilizerItems.sort(
+              (a: any, b: any) => a.distribution_end_date - b.distribution_end_date
+            )
+          }
+        }
       }
 
-      // FIXME: remove two lines
-      this.KYCStatus.userVerified = true
-      this.KYCStatus.step = 3
+      // search with name
+      if (searchName != '') {
+        this.fertilizerItems = this.fertilizerItems.filter((fertilizer: any) =>
+          fertilizer.title.toLowerCase().includes(searchName.toLowerCase())
+        )
+      }
+
+      this.showMoreMenu = []
+      this.fertilizerItems.forEach((element) => {
+        this.showMoreMenu.push(false)
+      })
+    },
+    moment() {
+      return moment()
+    },
+    getCoinPicUrl() {
+      let token
+      if (this.mintAddress == NATIVE_SOL.mintAddress) {
+        token = NATIVE_SOL
+      } else {
+        token = Object.values(TOKENS).find((item) => item.mintAddress === this.mintAddress)
+      }
+      if (token) {
+        this.coinName = token.symbol.toLowerCase()
+        if (token.picUrl) {
+          this.coinPicUrl = token.picUrl
+        } else {
+          this.coinPicUrl = ''
+        }
+      }
+    },
+    goToProject(fertilizer: any) {
+      localStorage.setItem('fertilizer-project', JSON.stringify(fertilizer))
+      this.$router.push({
+        path: '/nomadpad/project?project=' + fertilizer.mint
+      })
+    },
+    sortByStatus(option: string) {
+      this.sortUpcoming = option
+      this.showFilterMenu = false
+      this.filterFertilizer(this.searchName, this.filterProject)
+    },
+    sortByColumn(option: string) {
+      if (this.sortFunded === option) this.sortAsc = !this.sortAsc
+      this.sortFunded = option
+      this.filterFertilizer(this.searchName, this.filterProject)
+    },
+    sortByColumnMenu(option: string, asc: boolean) {
+      this.sortFunded = option
+      this.sortAsc = asc
+      this.showFilterMenu = false
+      this.filterFertilizer(this.searchName, this.filterProject)
+    },
+    showMore(idx: number) {
+      if (idx != this.currentShowMore) {
+        this.showMoreMenu = this.showMoreMenu.map((item) => {
+          return false
+        })
+      }
+      this.showMoreMenu = this.showMoreMenu.map((item, i) => {
+        if (i === idx) {
+          this.currentShowMore = idx
+          return !item
+        }
+        return item
+      })
+    },
+    hideMore() {
+      if (this.currentShowMore != -1) {
+        this.showMoreMenu = this.showMoreMenu.map((item) => {
+          return false
+        })
+        this.currentShowMore = -1
+      }
     }
   }
 })
@@ -1627,7 +1362,7 @@ export default Vue.extend({
 
 <style lang="less" scoped>
 // global stylesheet
-.fertilizer-project {
+.fertilizer {
   .btn-container {
     box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
     border-radius: 8px;
@@ -1635,27 +1370,13 @@ export default Vue.extend({
     height: auto;
   }
 
-  .btn-container.anchor {
-    text-align: center;
-    padding: 10px;
-  }
-
   .btn-transparent {
     background: transparent;
-    border-radius: 8px;
+    border-radius: 48px;
     border: none;
     height: auto;
     width: 100%;
     padding: 7.5px 0;
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  }
-
-  .btn-transparent.anchor {
-    color: #fff;
   }
 
   .btn-primary {
@@ -1667,82 +1388,133 @@ export default Vue.extend({
     padding: 4.5px 23.5px;
   }
 
+  .option-sort-collapse {
+    position: absolute;
+    top: 50px;
+    background: linear-gradient(rgba(75, 85, 231, 0.65098), rgba(182, 97, 150, 0.74902));
+    background-origin: border-box;
+    border: 2px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 18px 11px 14px rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+    min-width: 188px;
+    z-index: 999;
+
+    &.collapse-left {
+      left: 0;
+    }
+
+    &.collapse-right {
+      right: 0;
+    }
+
+    .collapse-item {
+      padding: 18px 0;
+      border-bottom: 1px solid #c4c4c420;
+
+      &:last-child {
+        border-bottom: 0;
+      }
+
+      &.active-item {
+        color: #e4c139;
+      }
+
+      a {
+        color: #fff;
+      }
+    }
+  }
+
   .project-status {
     padding: 4px 8px;
     border-radius: 6px;
 
+    &.upcoming {
+      background: #ec08deb3;
+    }
+
     &.whitelist {
-      background: @color-light-blue;
+      background: #ec08deb3;
     }
 
     &.sales {
-      background: @color-purple600;
-    }
-
-    &.open {
-      background: @color-purple500;
+      background: #ec08deb3;
     }
 
     &.distribution {
-      background: @color-yellow600;
+      background: #ec08deb3;
       color: @color-neutral900;
     }
 
     &.preparation {
-      background: @color-pink600;
+      background: #ec08deb3;
+    }
+
+    &.open {
+      background: #ec08deb3;
     }
   }
 
-  .status-label {
-    &.description {
-      color: #fff;
+  .project-name {
+    .logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 18px;
     }
 
-    &.success {
-      color: @color-green500;
-    }
+    .title {
+      text-align: left;
 
-    &.closed {
-      color: @color-red500;
+      .short-desc {
+        display: block;
+        color: rgba(255, 255, 255, 0.7);
+      }
     }
   }
 
-  .status-icon {
-    height: 16px;
-    width: 16px;
-    margin-right: 8px;
-  }
-
-  .alert-icon {
-    height: 24px;
-    width: 24px;
-    margin-right: 8px;
-  }
-
-  .coin-icon {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    margin-right: 6px;
+  .project-ath {
+    .value {
+      background: @color-petrol400;
+      color: @color-blue800;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
   }
 
   .info-icon {
-    width: 12px;
-    height: 12px;
-
-    &.left {
-      margin-left: 8px;
-    }
-
-    &.right {
+    img {
+      width: 12px;
+      height: 12px;
       margin-right: 8px;
     }
   }
 
-  .lock-icon {
-    width: 16px;
-    height: 16px;
-    margin-right: 6px;
+  .arrow-icon {
+    transition: all 0.3s;
+
+    &.arrow-up {
+      transform: rotate(180deg);
+    }
+  }
+
+  .social-link {
+    color: #fff;
+
+    .social-icon {
+      width: 18px;
+      height: 18px;
+      margin-left: 8px;
+    }
+  }
+
+  .detail-btn {
+    position: absolute;
+    right: 0;
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
   }
 
   .isDesktop {
@@ -1772,19 +1544,20 @@ export default Vue.extend({
   }
 }
 
-// background image
-// .launchpad-bg {
-//    background: @color-blue800 !important;
-//   background-image: url('@/assets/background/background_old.png') !important;
-//   background-repeat: no-repeat !important;
-//   background-position: top !important;
-//   background-size: 100% auto !important;
-//   //margin-top: -21px;
-//   min-height: calc(100vh - 64px - 82px);
-// }
-
 // class stylesheet
-.fertilizer-project.container {
+.fertilizers-container {
+  box-shadow: inset 0 0 28px #2d0b50e1;
+  background: rgba(129, 116, 245, 0.5);
+  border-radius: 18px;
+  padding: 20px 35px;
+  margin-top: 20px;
+
+  @media @max-sl-mobile {
+    padding: 15px;
+  }
+}
+
+.fertilizer.container {
   margin: 38px 0;
 
   @media @max-sl-mobile {
@@ -1795,573 +1568,454 @@ export default Vue.extend({
     .card-body {
       padding: 0;
 
-      .project-content {
-        display: flex;
-
-        @media @max-md-tablet {
-          display: block;
+      .fertilizer-head {
+        @media @max-sl-mobile {
+          display: block !important;
         }
 
-        .project-preview-container {
-          position: fixed;
-          width: 300px;
+        .title {
+          text-align: center;
+          position: relative;
+          float: left;
 
-          @media @max-md-tablet {
-            position: relative;
-            width: 100%;
-          }
-
-          .project-back {
-            margin-bottom: 28px;
-
-            .back-to-list {
-              opacity: 0.5;
-              width: fit-content;
-
-              .back-icon {
-                margin-right: 8px;
-              }
-
-              .back-label {
-                color: rgb(255, 254, 254);
-              }
-            }
-          }
-
-          .project-preview-ido-container {
-            @media @max-md-tablet {
-              display: flex;
-              justify-content: space-between;
-            }
-
-            @media @max-sl-mobile {
-              display: block;
-            }
-
-            .project-preview {
-              box-shadow: inset 0 0 28px #2d0b50e1;
-              background: rgba(129, 116, 245, 0.5);
-              border-radius: 8px;
-              padding: 16px;
-              margin-bottom: 16px;
-
-              @media @max-md-tablet {
-                width: 50%;
-                margin-bottom: 0;
-                margin-right: 8px;
-              }
-
-              @media @max-sl-mobile {
-                width: 100%;
-                margin-bottom: 16px;
-                margin-right: 0;
-              }
-
-              .project-overview {
-                .project-title {
-                  .project-logo {
-                    border-radius: 50%;
-                    margin-right: 8px;
-                    width: 40px;
-                  }
-                }
-              }
-
-              .project-countdown {
-                margin-top: 16px;
-              }
-
-              .project-progress {
-                margin-top: 16px;
-              }
-            }
-
-            .project-ido {
-              border-radius: 8px;
-
-              @media @max-md-tablet {
-                width: 50%;
-                margin-left: 8px;
-              }
-
-              @media @max-sl-mobile {
-                width: 100%;
-                margin-left: 0;
-              }
-
-              .project-ido-process {
-                height: 100%;
-                width: 100%;
-                box-shadow: inset 0 0 28px #2d0b50e1;
-                background: rgba(129, 116, 245, 0.5);
-                border-radius: 8px;
-                padding: 13px 21px;
-
-                .label {
-                  display: block;
-                  margin-bottom: 18px;
-                }
-              }
-            }
+          @media @max-sl-mobile {
+            margin-bottom: 18px !important;
           }
         }
 
-        .project-detail-container {
-          width: calc(100% - 300px - 16px);
-          margin-left: calc(300px + 16px);
-          padding-top: 52px;
+        .information {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
 
-          @media @max-md-tablet {
+          @media @max-sl-mobile {
             width: 100%;
-            margin-left: 0;
-            margin-top: 16px;
-            padding-top: 0;
           }
 
-          .project-detail-static {
-            box-shadow: inset 0 0 28px #2d0b50e1;
-            background: rgba(129, 116, 245, 0.5);
-            border-radius: 8px;
-            padding: 32px;
+          .tvl-info {
+            margin-right: 18px;
+          }
 
-            @media @max-sl-mobile {
-              padding: 24px;
-            }
+          .action-btn-group {
+            display: flex;
+            align-items: center;
 
-            .project-detail-card {
+            .reload-btn {
+              background: linear-gradient(rgba(75, 85, 231, 0.65098), rgba(182, 97, 150, 0.74902));
+              border-radius: 8px;
+              padding: 6px;
               display: flex;
+              align-items: center;
+              justify-content: center;
 
               @media @max-lg-tablet {
+                margin-left: 5px;
+              }
+
+              img {
+                width: 18px;
+                height: 18px;
+              }
+
+              &.active img {
+                transform: rotate(360deg);
+                transition: all 1s ease-in-out;
+              }
+            }
+          }
+        }
+      }
+
+      .fertilizer-option-bar {
+        margin: 38px 0;
+
+        @media @max-sl-mobile {
+          margin: 28px 0;
+        }
+
+        .option-tab-group {
+          display: flex;
+
+          @media @max-sl-mobile {
+            display: none;
+          }
+
+          &.option-tab-collapse {
+            display: none;
+
+            @media @max-sl-mobile {
+              position: relative;
+              display: flex;
+              align-items: center;
+              padding: 6px 10px;
+              border: 2px solid @color-blue500;
+              border-radius: 8px;
+              background: linear-gradient(rgba(75, 85, 231, 0.95), #b66196);
+
+              label {
+                color: #fff;
+              }
+
+              .arrow-icon {
+                margin-left: 4px;
+              }
+            }
+          }
+
+          .option-tab {
+            margin-right: 38px;
+
+            &:last-child {
+              margin-right: 0;
+            }
+
+            button {
+              background: transparent;
+              border: none;
+              outline: none;
+              padding: 0;
+              margin-bottom: 8px;
+
+              .deposit-icon {
+                margin-right: 8px;
+              }
+            }
+
+            .active-underline {
+              height: 4px;
+              border-radius: 10px;
+              background: @gradient-color-icon;
+            }
+          }
+        }
+
+        .option-filter-group {
+          position: relative;
+          display: flex;
+          align-items: center;
+
+          .option-filter {
+            border-radius: 8px;
+            padding: 0 8px;
+            height: 40px;
+            margin-left: 18px;
+            position: relative;
+            z-index: 0;
+            background: #28068438;
+
+            &::after {
+              content: '';
+            }
+
+            &::before {
+              content: '';
+              position: absolute;
+              z-index: -1;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background: @gradient-color-icon;
+              padding: 1px;
+              border-radius: 8px;
+              -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+              -webkit-mask-composite: xor;
+              mask-composite: exclude;
+            }
+
+            @media @max-sl-mobile {
+              height: 32px;
+              padding: 0 4px;
+            }
+
+            &:first-child {
+              margin-left: 0;
+            }
+
+            &.option-filter-fixed {
+              width: 40px;
+
+              @media @max-sl-mobile {
+                width: 32px;
+              }
+            }
+
+            &.option-filter-collapse {
+              display: none !important;
+
+              @media @max-md-tablet {
+                display: flex !important;
+              }
+            }
+
+            &.option-sort {
+              @media @max-md-tablet {
+                display: none !important;
+              }
+            }
+
+            .option-sort-item {
+              letter-spacing: 0.15px;
+
+              label {
+                color: #eae8f1;
+                opacity: 0.5;
+                margin-right: 8px;
+              }
+
+              .sort-detail {
+                display: flex;
+                align-items: center;
+
+                .arrow-icon {
+                  margin-left: 8px;
+                }
+              }
+            }
+          }
+
+          .option-search-collapse {
+            position: absolute;
+            top: 0;
+            left: -209px;
+            transition: visibility 0s, opacity 0.5s linear;
+            background: linear-gradient(rgb(75, 85, 231), rgb(182, 97, 150));
+            border: 2px solid @color-blue500;
+            border-radius: 8px;
+            padding: 18px;
+            z-index: 999;
+            width: 250px;
+
+            .collapse-item-header {
+              margin-bottom: 10px;
+            }
+
+            .collapse-item-body {
+              input {
+                border: 2px solid @color-blue400;
+                border-radius: 8px;
+                padding: 8px 18px;
+                background-color: transparent;
+                color: #ccd1f1;
+                width: 100%;
+
+                &:active,
+                &:focus,
+                &:hover {
+                  outline: 0;
+                }
+
+                &::placeholder {
+                  color: #ccd1f1;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      .fertilizer-content {
+        .fertilizer-project-table {
+          background: @color-blue700;
+          border: 3px solid @color-blue500;
+          border-radius: 18px;
+
+          .project-banner {
+            position: relative;
+            border-bottom: 3px solid @color-blue500;
+            height: 190px;
+
+            .banner {
+              width: 100%;
+              height: 100%;
+              border-radius: 18px 18px 0 0;
+            }
+
+            .project-status {
+              position: absolute;
+              top: 9px;
+              left: 13px;
+            }
+          }
+
+          &.first {
+            border: 3px solid @color-petrol500;
+
+            .project-banner {
+              border-bottom: 3px solid @color-petrol500;
+            }
+          }
+
+          .project-details {
+            padding: 14px;
+
+            .project-title {
+              height: 170px;
+
+              @media @max-sl-mobile {
+                height: 111px;
+              }
+
+              .short-desc {
                 display: block;
+                margin-top: 4px;
               }
+            }
 
-              .project-detail-desc {
-                width: 40%;
-                padding-right: 12px;
+            .project-info {
+              margin-top: 18px;
+              height: 48px;
 
+              .project-balance {
                 @media @max-lg-tablet {
-                  width: 100%;
-                  padding-right: 0;
+                  height: 48px;
                 }
 
-                .project-title {
-                  margin-bottom: 16px;
+                .label {
+                  color: rgba(255, 255, 255, 0.6);
+                }
 
-                  .project-logo {
-                    margin-right: 8px;
+                .value {
+                  .coin-icon {
+                    width: 18px;
+                    height: 18px;
                     border-radius: 50%;
-                    width: 40px;
+                    margin-right: 8px;
                   }
-                }
-
-                .project-short-desc {
-                  margin-bottom: 8px;
                 }
               }
 
-              .project-detail-info-group {
-                width: 60%;
-                padding-left: 12px;
+              &.whitelist-countdown {
+                // height: 48px;
+                height: 114px;
+                background: @color-blue800;
+                padding: 8px;
+                border-radius: 18px;
+              }
 
+              &.fcsb-container {
                 @media @max-lg-tablet {
-                  width: 100%;
-                  padding-left: 0;
-                  margin-top: 24px;
-                }
+                  display: inline-block !important;
 
-                .project-detail-info-item {
-                  height: 90px;
+                  .project-balance {
+                    margin-bottom: 18px;
 
-                  .title {
-                    color: rgba(255, 255, 255, 0.6);
-                  }
-
-                  .value {
-                    .website {
-                      color: #fff;
-                      text-decoration: underline;
-                      text-underline-position: under;
+                    &:last-child {
+                      margin-bottom: 0;
                     }
                   }
                 }
               }
             }
 
-            &.banner {
-              padding: 0 32px;
-              margin-bottom: 100px;
-
-              @media @max-sl-mobile {
-                padding: 0 24px;
-              }
-
-              .project-detail-stake {
-                padding: 24px 0;
-
-                .btn-container {
-                  max-width: 150px;
-                  width: 100%;
-                  margin-top: 18px;
-                }
-              }
-
-              .farmer-img {
-                width: 28%;
-
-                @media @max-lg-tablet {
-                  width: 35%;
-                }
-
+            .project-desc {
+              &.project-desc-whitelist {
                 @media @max-sl-mobile {
-                  display: none;
-                }
-              }
-            }
-
-            &.transparent {
-              background: transparent;
-              padding: 0;
-              margin-bottom: 60px;
-
-              .project-category-title {
-                margin-bottom: 32px !important;
-              }
-
-              .project-category-content-about {
-                display: flex;
-                align-content: stretch;
-
-                @media @max-sl-mobile {
-                  display: block;
+                  display: inline-block !important;
                 }
 
-                .banner-img {
-                  width: 100%;
-                  height: 100%;
+                .project-title {
+                  width: 50%;
+
+                  @media @max-lg-tablet {
+                    width: 60%;
+                  }
+
+                  @media @max-sl-mobile {
+                    width: 100%;
+                  }
                 }
-              }
 
-              .project-category-banner-img {
-                width: 100%;
-                border-radius: 8px;
-                margin-bottom: 40px;
-              }
+                .project-info {
+                  margin-top: 0;
+                  height: auto;
+                  width: 50%;
 
-              .information {
-                .information-item {
-                  margin-top: 8px;
-                  padding: 8px 0;
-                  border-bottom: 1px solid @color-blue200;
+                  @media @max-lg-tablet {
+                    width: 40%;
+                  }
 
-                  .label {
-                    color: rgba(255, 255, 255, 0.7);
+                  @media @max-sl-mobile {
+                    width: 100%;
+                    margin-top: 18px;
                   }
                 }
               }
             }
           }
 
-          .project-detail-condition {
-            margin: 32px 0;
+          .btn-container {
+            margin-top: 18px;
+          }
+        }
 
-            .project-detail-item {
-              box-shadow: inset 0 0 28px #2d0b50e1;
-              background: rgba(129, 116, 245, 0.5);
+        .fertilizer-funded-table {
+          width: 100%;
+
+          .fertilizer-funded-table-header {
+            background: #273d9463;
+            padding: 0 20px;
+            border-radius: 10px;
+
+            &.scrollFixed {
+              position: sticky;
+              background: @color-blue800;
+              top: 70px;
+              z-index: 999;
+              width: 100%;
+              transition: 0.3s all ease-in-out;
+            }
+
+            .header-column {
+              text-align: center;
+              padding: 18px 0;
+
+              .header-column-title {
+                cursor: pointer;
+                display: flex;
+                justify-content: center;
+
+                .arrow-icon {
+                  margin-left: 4px;
+                }
+
+                .sort-icon-active {
+                  color: #13ecab;
+                }
+              }
+            }
+          }
+
+          .fertilizer-funded-table-body {
+            .fertilizer-funded-table-item {
+              display: flex;
+              align-items: center;
+              background: rgba(23, 32, 88, 0.9);
               border-radius: 8px;
-              padding: 32px;
+              padding: 18px;
+              border: 3px solid transparent;
+              margin: 20px 0 0;
 
-              @media @max-sl-mobile {
-                padding: 24px;
+              &:hover {
+                border-color: @color-blue500;
               }
 
-              .ticket-tasks-group {
-                margin-top: 32px;
-
-                @media @max-lg-tablet {
-                  display: block !important;
-                }
-
-                .ticket-tasks {
-                  width: 60%;
-                  padding-right: 48px;
-
-                  @media @max-lg-tablet {
-                    width: 100%;
-                    padding-right: 0;
-                  }
-
-                  .ticket-task-status-group {
-                    margin: 24px 0;
-
-                    @media @max-sl-mobile {
-                      display: block !important;
-                    }
-
-                    .ticket-task-status-card {
-                      background: @color-blue400;
-                      width: calc((100% - 24px) / 2);
-                      padding: 16px;
-                      border-radius: 8px;
-
-                      @media @max-sl-mobile {
-                        width: 100%;
-
-                        &:first-child {
-                          margin-bottom: 24px;
-                        }
-                      }
-
-                      &.active {
-                        background: @color-green500;
-                      }
-
-                      .ticket-task-status {
-                        .ticket-social-icon {
-                          width: 24px;
-                          opacity: 0.5;
-                          margin-right: 24px;
-                        }
-                      }
-                    }
-                  }
-
-                  .ticket-share-group {
-                    position: relative;
-                    margin: 8px 0 24px 0;
-                    padding: 0 8px;
-                    background: rgba(226, 227, 236, 0.1);
-                    border-radius: 12px;
-
-                    .ticket-share-link {
-                      background: transparent;
-                      outline: none;
-                      border: none;
-                      width: 100%;
-                      padding: 10px;
-                    }
-
-                    .copy-icon {
-                      margin: 0 10px;
-                    }
-
-                    .copy-notification {
-                      position: absolute;
-                      top: 50px;
-                      right: 10px;
-                      background: @gradient-color-primary;
-                      background-origin: border-box;
-                      border: 2px solid rgba(255, 255, 255, 0.14);
-                      box-shadow: 18px 11px 14px rgba(0, 0, 0, 0.25);
-                      border-radius: 8px;
-                      padding: 12px;
-                    }
-                  }
-
-                  .ticket-btn-group {
-                    @media @max-sl-mobile {
-                      display: block !important;
-                    }
-
-                    .share-btn {
-                      width: calc((100% - 24px) / 2);
-
-                      @media @max-sl-mobile {
-                        width: 100%;
-
-                        &:first-child {
-                          margin-bottom: 24px;
-                        }
-                      }
-
-                      .btn-primary {
-                        width: 100%;
-                        padding: 10px 0;
-                      }
-                    }
-                  }
-                }
-
-                .ticket-preview {
-                  width: 40%;
-                  height: 100%;
-                  background: @color-blue800;
-                  border-radius: 8px;
-                  padding: 16px;
-
-                  @media @max-lg-tablet {
-                    width: 100%;
-                    margin-top: 24px;
-                  }
-                  .ticket-earned {
-                    .ticket-earned-status {
-                      background: @gradient-color03;
-                      padding: 16px;
-                      margin-top: 16px;
-                      border-radius: 8px;
-
-                      .referral-icon {
-                        margin-right: 24px;
-                      }
-                    }
-                  }
-                }
+              &:last-child {
+                margin-bottom: 0;
               }
 
-              .distribution-details {
-                margin-top: 24px;
+              .state {
+                text-align: center;
 
-                .sale-details-group {
-                  margin: 24px 0;
+                .show-more {
+                  position: relative;
+                  width: 20px;
+                  margin: auto;
 
-                  .sale-detail-card {
-                    background: @color-blue500;
-                    min-width: 132px;
-                    border-radius: 8px;
-                    padding: 16px;
-                    margin-right: 24px;
-
-                    &:last-child {
-                      margin-right: 0;
-                    }
+                  .option-sort-collapse {
+                    top: 0;
+                    right: 25px;
                   }
-                }
-
-                .btn-container {
-                  width: 212px;
-                }
-              }
-
-              .project-detail-sales {
-                .sales-start-countdown {
-                  margin-top: 32px;
-                }
-              }
-
-              .project-detail-open {
-                display: table;
-                margin: auto;
-
-                .kyc-form {
-                  .kyc-progress-container {
-                    margin-bottom: 48px;
-
-                    .kyc-step {
-                      width: calc((100% - 16px) / 3);
-                      margin-right: 8px;
-
-                      &:last-child {
-                        margin-right: 0;
-                      }
-
-                      .kyc-no {
-                        display: block;
-                        background: rgba(255, 255, 255, 0.4);
-                        width: 24px;
-                        height: 24px;
-                        border-radius: 50%;
-                        margin-bottom: 8px !important;
-                        color: @color-blue700;
-                      }
-
-                      .kyc-title {
-                        color: rgba(255, 255, 255, 0.4);
-                      }
-
-                      &.active {
-                        .kyc-no {
-                          background: @color-petrol500;
-                        }
-
-                        .kyc-title {
-                          color: @color-petrol500;
-                        }
-                      }
-                    }
-                  }
-
-                  .kyc-status-container {
-                    margin-bottom: 16px;
-
-                    .kyc-status {
-                      padding: 4px 8px;
-                      border-radius: 6px;
-
-                      &.failed {
-                        background: @color-red600;
-                      }
-
-                      &.progress {
-                        background: @color-yellow600;
-                      }
-
-                      &.success {
-                        background: @color-petrol500;
-                      }
-                    }
-                  }
-
-                  .kyc-description {
-                    margin-bottom: 24px;
-
-                    .kyc-status-icon {
-                      margin-top: 24px !important;
-                    }
-                  }
-                }
-
-                .buy-form {
-                  .token-amount {
-                    background: rgba(226, 227, 236, 0.1);
-                    border-radius: 12px;
-                    padding: 10px;
-                    margin: 16px 0 8px 0;
-
-                    .token-amount-input {
-                      width: calc(100% - 83px);
-
-                      input {
-                        border: none;
-                        outline: none;
-                        background: transparent;
-                        width: 100%;
-
-                        &::-webkit-inner-spin-button {
-                          display: none;
-                        }
-                      }
-                    }
-                    .token-max-amount {
-                      color: @color-blue100;
-                    }
-                  }
-
-                  .receive-amount {
-                    .receive-amount-output {
-                      background: @color-blue800;
-                      border-radius: 12px;
-                      padding: 10px;
-                      margin-top: 4px;
-
-                      .receive-amount-value {
-                        color: rgba(255, 255, 255, 0.5);
-                      }
-                    }
-                  }
-
-                  .receive-notification {
-                    background: @color-blue800;
-                    margin-top: 32px;
-                    padding: 18px;
-                    border-radius: 18px;
-                  }
-
-                  .btn-container {
-                    margin-top: 24px;
-                  }
-                }
-
-                .distribution-start-countdown {
-                  margin-bottom: 32px;
                 }
               }
             }
@@ -2371,67 +2025,93 @@ export default Vue.extend({
     }
   }
 }
+
+@media @max-lg-tablet {
+  .fertilizer.container {
+    .state {
+      .label {
+        display: block;
+        color: @color-neutral400;
+      }
+
+      .project-ath .value {
+        margin-top: 4px;
+      }
+    }
+
+    .collapse-row {
+      background: @color-blue800;
+      border-radius: 8px;
+      padding: 18px;
+
+      .btn-group {
+        .btn-group-item {
+          flex-wrap: wrap;
+          &:last-child {
+            margin-top: 18px;
+          }
+        }
+
+        .btn-container {
+          margin-top: 10px;
+        }
+
+        .btn-container,
+        .social-link {
+          margin-right: 18px;
+
+          &:last-child {
+            margin-right: 0;
+          }
+        }
+      }
+    }
+  }
+}
 </style>
+
 <style lang="less">
-.fertilizer-project {
-  // ant steps
-  .ant-steps-vertical {
-    .ant-steps-item-content {
-      min-height: 45px;
-    }
+.fertilizer {
+  .ant-collapse {
+    background: transparent;
+    border: none;
 
-    .ant-steps-item-active,
-    .ant-steps-item-finish {
-      .ant-steps-item-tail::after,
-      .ant-steps-item-icon {
-        background-color: @color-petrol50 !important;
+    .ant-collapse-item {
+      position: relative;
+      background: rgba(23, 32, 88, 0.9);
+      border-radius: 8px !important;
+      margin-bottom: 8px;
+      border-bottom: 0;
+      border: 3px solid transparent;
+
+      &:hover {
+        border-color: @color-blue500;
       }
 
-      .ant-steps-item-title {
-        color: @color-petrol50 !important;
-      }
-    }
+      .ant-collapse-header {
+        padding: 18px;
 
-    .ant-steps-item-error {
-      .ant-steps-item-icon {
-        background-color: red !important;
-      }
-    }
-
-    .ant-steps-item {
-      .ant-steps-item-container {
-        .ant-steps-item-tail {
-          &::after {
-            background-color: rgba(255, 255, 255, 0.4);
-          }
+        .ant-collapse-arrow {
+          display: none;
         }
+      }
 
-        .ant-steps-item-icon {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 24px;
-          height: 24px;
-          border: none;
-          background-color: rgba(255, 255, 255, 0.4);
+      .ant-collapse-content {
+        border: none;
+        background: transparent;
 
-          .ant-steps-icon {
-            display: flex;
-            top: 0;
-            font-size: 13px;
-            line-height: 19.5px;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-            color: @color-blue700;
-          }
-        }
-
-        .ant-steps-item-title {
-          width: 100%;
-          color: rgba(255, 255, 255, 0.4);
+        .ant-collapse-content-box {
+          padding: 18px;
         }
       }
     }
+  }
+
+  .project-info .project-balance .value .ant-statistic-content-value {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    letter-spacing: 0.15px;
   }
 }
 </style>

@@ -13,8 +13,8 @@ import { NATIVE_SOL, TOKENS, TokenInfo } from './tokens'
 // @ts-ignore
 import SERUM_MARKETS from '@project-serum/serum/lib/markets.json'
 import { cloneDeep } from 'lodash-es'
-import { getSwapOutAmount} from '@/utils/swap'
-const PRICE_IMPACT_LIMIT = 10//percentage
+import { getSwapOutAmount } from '@/utils/swap'
+const PRICE_IMPACT_LIMIT = 10 //percentage
 export interface LiquidityPoolInfo {
   name: string
   coin: TokenInfo
@@ -32,7 +32,7 @@ export interface LiquidityPoolInfo {
 
   poolCoinTokenAccount: string
   poolPcTokenAccount: string
-  
+
   poolWithdrawQueue: string
   poolTempLpTokenAccount: string
 
@@ -47,7 +47,6 @@ export interface LiquidityPoolInfo {
 
   official: boolean
 }
-
 
 /**
  * Get pool use two mint addresses
@@ -84,7 +83,7 @@ export function getCropperPoolListByTokenMintAddresses(
       if (
         ((pool.coin.mintAddress === coinMintAddress && pool.pc.mintAddress === pcMintAddress) ||
           (pool.coin.mintAddress === pcMintAddress && pool.pc.mintAddress === coinMintAddress)) &&
-        (pool.version === CRP_LP_VERSION_V1)
+        pool.version === CRP_LP_VERSION_V1
         // && pool.official //@zhaohui
       ) {
         return !(ammIdOrMarket !== undefined && pool.ammId !== ammIdOrMarket && pool.serumMarket !== ammIdOrMarket)
@@ -107,7 +106,7 @@ export function getRaydiumPoolListByTokenMintAddresses(
       if (
         ((pool.coin.mintAddress === coinMintAddress && pool.pc.mintAddress === pcMintAddress) ||
           (pool.coin.mintAddress === pcMintAddress && pool.pc.mintAddress === coinMintAddress)) &&
-        (pool.version === 4)
+        pool.version === 4
         // && pool.official //@zhaohui
       ) {
         return !(ammIdOrMarket !== undefined && pool.ammId !== ammIdOrMarket && pool.serumMarket !== ammIdOrMarket)
@@ -126,10 +125,9 @@ export function getPoolListByTokenMintAddresses(
   ammIdOrMarket: string | undefined
 ): LiquidityPoolInfo[] {
   const crp_pools = getCropperPoolListByTokenMintAddresses(coinMintAddress, pcMintAddress, ammIdOrMarket)
-  if(crp_pools.length){
+  if (crp_pools.length) {
     return crp_pools
-  }
-  else return getRaydiumPoolListByTokenMintAddresses(coinMintAddress, pcMintAddress, ammIdOrMarket)
+  } else return getRaydiumPoolListByTokenMintAddresses(coinMintAddress, pcMintAddress, ammIdOrMarket)
 }
 
 export function getLpMintByTokenMintAddresses(
@@ -193,12 +191,11 @@ export function getLpListByTokenMintAddresses(
 }
 
 export function canWrap(fromMintAddress: string, toMintAddress: string): boolean {
-  if(TOKENS.WUSDT && TOKENS.WUSDT.mintAddress){
+  if (TOKENS.WUSDT && TOKENS.WUSDT.mintAddress) {
     return fromMintAddress === TOKENS.WUSDT.mintAddress && toMintAddress === TOKENS.USDT.mintAddress
   }
-  return false;
+  return false
 }
-
 
 export function getPoolByLpMintAddress(lpMintAddress: string): LiquidityPoolInfo | undefined {
   const pool = LIQUIDITY_POOLS.find((pool) => pool.lp.mintAddress === lpMintAddress)
@@ -224,20 +221,19 @@ export function getAddressForWhat(address: string) {
   return {}
 }
 
-export function findBestCropperLP(pools:any, baseMint:string, quoteMint:string, amountIn:string, slippage: number)
-{
+export function findBestCropperLP(pools: any, baseMint: string, quoteMint: string, amountIn: string, slippage: number) {
   const lpList = getCropperPoolListByTokenMintAddresses(
     baseMint === TOKENS.WSOL.mintAddress ? NATIVE_SOL.mintAddress : baseMint,
     quoteMint === TOKENS.WSOL.mintAddress ? NATIVE_SOL.mintAddress : quoteMint,
     undefined
   )
-  
-  let bestLP:any = null
-  let maxAmount = 0, minPriceImpact = Number.POSITIVE_INFINITY;
-  lpList.forEach(lpInfo => {
+
+  let bestLP: any = null
+  let maxAmount = 0,
+    minPriceImpact = Number.POSITIVE_INFINITY
+  lpList.forEach((lpInfo) => {
     let poolInfo = pools[lpInfo.lp.mintAddress]
-    if(poolInfo.fees)
-    {
+    if (poolInfo.fees) {
       const { amountOut, amountOutWithSlippage, priceImpact } = getSwapOutAmount(
         poolInfo,
         baseMint,
@@ -245,35 +241,34 @@ export function findBestCropperLP(pools:any, baseMint:string, quoteMint:string, 
         amountIn,
         slippage
       )
-      if(
-        priceImpact < PRICE_IMPACT_LIMIT && minPriceImpact < PRICE_IMPACT_LIMIT && maxAmount < amountOut.wei.toNumber() ||
-        priceImpact < PRICE_IMPACT_LIMIT && PRICE_IMPACT_LIMIT < minPriceImpact ||
-        PRICE_IMPACT_LIMIT  < priceImpact && priceImpact < minPriceImpact
-      )
-      {
+      if (
+        (priceImpact < PRICE_IMPACT_LIMIT &&
+          minPriceImpact < PRICE_IMPACT_LIMIT &&
+          maxAmount < amountOut.wei.toNumber()) ||
+        (priceImpact < PRICE_IMPACT_LIMIT && PRICE_IMPACT_LIMIT < minPriceImpact) ||
+        (PRICE_IMPACT_LIMIT < priceImpact && priceImpact < minPriceImpact)
+      ) {
         maxAmount = amountOut.wei.toNumber()
         bestLP = poolInfo
         minPriceImpact = priceImpact
       }
     }
-  });
+  })
   return bestLP
 }
 
-export function findBestLP(pools:any, baseMint:string, quoteMint:string, amountIn:string, slippage:number)
-{
+export function findBestLP(pools: any, baseMint: string, quoteMint: string, amountIn: string, slippage: number) {
   const lpList = getPoolListByTokenMintAddresses(
     baseMint === TOKENS.WSOL.mintAddress ? NATIVE_SOL.mintAddress : baseMint,
     quoteMint === TOKENS.WSOL.mintAddress ? NATIVE_SOL.mintAddress : quoteMint,
     undefined
   )
-  
-  let bestLP:any = null
+
+  let bestLP: any = null
   let maxAmount = 0
-  lpList.forEach(lpInfo => {
+  lpList.forEach((lpInfo) => {
     let poolInfo = pools[lpInfo.lp.mintAddress]
-    if(poolInfo.fees)
-    {
+    if (poolInfo.fees) {
       const { amountOut, amountOutWithSlippage, priceImpact } = getSwapOutAmount(
         poolInfo,
         baseMint,
@@ -282,23 +277,23 @@ export function findBestLP(pools:any, baseMint:string, quoteMint:string, amountI
         slippage
       )
 
-      console.log("Impact check", priceImpact)
+      console.log('Impact check', priceImpact)
 
-      if(priceImpact > PRICE_IMPACT_LIMIT){
-        return;
+      if (priceImpact > PRICE_IMPACT_LIMIT) {
+        return
       }
-      if(!bestLP || maxAmount < amountOut.wei.toNumber()){
+      if (!bestLP || maxAmount < amountOut.wei.toNumber()) {
         maxAmount = amountOut.wei.toNumber()
         bestLP = poolInfo
       }
     }
-  });
+  })
   return bestLP
 }
 
 export function isOfficalMarket(marketAddress: string) {
-  if(DEVNET_MODE){
-    return  true
+  if (DEVNET_MODE) {
+    return true
   }
   for (const market of SERUM_MARKETS) {
     if (market.address === marketAddress && !market.deprecated) {
@@ -314,39 +309,36 @@ export function isOfficalMarket(marketAddress: string) {
 
   return false
 }
-export function getPoolLocation(version:number)
-{
-  if(version == 4)
-  {
+export function getPoolLocation(version: number) {
+  if (version == 4) {
     return ENDPOINT_RAY
-  }
-  else if(version == CRP_LP_VERSION_V1){
+  } else if (version == CRP_LP_VERSION_V1) {
     return ENDPOINT_CRP
   }
 }
 export function getAllCropperPools() {
-
-  const polo:any = []
+  const polo: any = []
   LIQUIDITY_POOLS.forEach(function (value) {
-    if(value.version == CRP_LP_VERSION_V1 && value.official || value.ammId === "3aBomPsmJc5wBsYQQffQXtXWiS6pw4hbGv29Dai8DkiY")
-    {
+    if (
+      (value.version == CRP_LP_VERSION_V1 && value.official) ||
+      value.ammId === '3aBomPsmJc5wBsYQQffQXtXWiS6pw4hbGv29Dai8DkiY'
+    ) {
       let item = {
-        'name' : value.coin.name + ' - ' + value.pc.name,
-        'coin1' : value.coin,
-        'coin2' : value.pc,
-        'lp_mint' : value.lp.mintAddress,
-        'lp' : {
-          coin : cloneDeep(value.coin) ,
-          pc : cloneDeep(value.pc),
-          mintAddress : cloneDeep(value.lp.mintAddress)
+        name: value.coin.name + ' - ' + value.pc.name,
+        coin1: value.coin,
+        coin2: value.pc,
+        lp_mint: value.lp.mintAddress,
+        lp: {
+          coin: cloneDeep(value.coin),
+          pc: cloneDeep(value.pc),
+          mintAddress: cloneDeep(value.lp.mintAddress)
         },
-        'ammId' : value.ammId,
-        'serumMarket' : value.serumMarket
-  
-      };
-      polo.push(item);  
+        ammId: value.ammId,
+        serumMarket: value.serumMarket
+      }
+      polo.push(item)
     }
-  });
+  })
   return polo
 }
 

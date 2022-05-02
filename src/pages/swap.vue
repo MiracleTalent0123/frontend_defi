@@ -60,6 +60,9 @@
               </a>
             </div>
           </div>
+          <div class="information">
+            <p class="font-large weight-semi">Circulating supply : {{ circulatingSupply.toLocaleString() }}</p>
+          </div>
           <CoinInput
             v-model="fromCoinAmount"
             :balance-offset="fromCoin && fromCoin.symbol === 'SOL' ? -0.05 : 0"
@@ -420,6 +423,7 @@ export default Vue.extend({
     return {
       TOKENS,
       TVL: 0 as number,
+      circulatingSupply: 0 as number,
       // should check if user have enough SOL to have a swap
       solBalance: null as TokenAmount | null,
       wsolBalance: null as TokenAmount | null,
@@ -635,6 +639,7 @@ export default Vue.extend({
   },
   mounted() {
     this.getTvl()
+    this.getCirculatingSupply()
     this.$accessor.token.loadTokens()
     this.$accessor.wallet.getTokenAccounts()
     this.updateCoinInfo(this.wallet.tokenAccounts)
@@ -649,6 +654,12 @@ export default Vue.extend({
   methods: {
     gt,
     get,
+    async getCirculatingSupply() {
+      const supply = await fetch(
+        'https://cors-anywhere.herokuapp.com/https://neonomad-api.azurewebsites.net/'
+      ).then((res) => res.json())
+      this.circulatingSupply = supply
+    },
     async getTvl() {
       let cur_date = new Date().getTime()
       if (window.localStorage.TVL_last_updated) {

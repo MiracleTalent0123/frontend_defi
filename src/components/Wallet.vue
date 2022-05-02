@@ -44,6 +44,7 @@
             <img :src="importIcon(`/wallets/${name.replace(' ', '-').toLowerCase()}.png`)" />
             <span>{{ name }}</span>
           </Button>
+          <p style="line-height: normal">New here? <a>Get started on NeoNomad</a></p>
         </div>
         <div v-else class="wallet-info">
           <p class="address font-medium">{{ wallet.address }}</p>
@@ -117,7 +118,8 @@ import {
   getAllPools,
   getPoolUserAccount,
   calculateTiers,
-  TIERS_XCRP} from '@/utils/crp-stake'
+  TIERS_XCRP
+} from '@/utils/crp-stake'
 const Vco = require('v-click-outside')
 const network = WalletAdapterNetwork.Devnet
 // declare const window: any
@@ -877,7 +879,7 @@ export default class Wallet extends Vue {
     align-items: center;
 
     .btncontainer {
-      background: linear-gradient(rgba(75,85,231,.65098),rgba(182,97,150,.74902));
+      background: linear-gradient(rgba(75, 85, 231, 0.65098), rgba(182, 97, 150, 0.74902));
       background-origin: border-box;
       display: flex;
       align-items: center;

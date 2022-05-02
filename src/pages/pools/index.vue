@@ -1854,7 +1854,8 @@ export default class Pools extends Vue {
               border-radius: 10px;
               margin: 20px 0 0;
               padding: 20px;
-              background: #192861c0;
+              background: rgba(23, 32, 88, 0.9);
+              border: 3px solid transparent;
 
               &:hover {
                 border-color: @color-blue500;
