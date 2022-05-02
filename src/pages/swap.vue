@@ -423,7 +423,7 @@ export default Vue.extend({
     return {
       TOKENS,
       TVL: 0 as number,
-      circulatingSupply: 0 as number,
+      circulatingSupply: 425134 as number,
       // should check if user have enough SOL to have a swap
       solBalance: null as TokenAmount | null,
       wsolBalance: null as TokenAmount | null,
@@ -655,10 +655,10 @@ export default Vue.extend({
     gt,
     get,
     async getCirculatingSupply() {
-      const supply = await fetch(
-        'https://cors-anywhere.herokuapp.com/https://neonomad-api.azurewebsites.net/'
-      ).then((res) => res.json())
-      this.circulatingSupply = supply
+      // const supply = await fetch(
+      //   'https://cors-anywhere.herokuapp.com/https://neonomad-api.azurewebsites.net/'
+      // ).then((res) => res.json())
+      // this.circulatingSupply = supply
     },
     async getTvl() {
       let cur_date = new Date().getTime()
