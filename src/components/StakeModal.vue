@@ -35,15 +35,17 @@
               Half
             </button>
           </div>
-          <input type="number" 
-          v-model="toStake" placeholder="0.00" />
+          <input type="number" v-model="toStake" placeholder="0.00" />
         </div>
         <div v-if="crpbalance" class="label fcsb-container font-xsmall weight-semi">
           <span> Balance: {{ crpbalance }} </span>
-          <span> ~${{ 
-          (Math.round(crpbalance * this.price.prices['NNI'] * 1000) / 1000)
-            .toString()
-            .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}} </span>
+          <span>
+            ~${{
+              (Math.round(crpbalance * this.price.prices['NNI'] * 1000) / 1000)
+                .toString()
+                .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+            }}
+          </span>
         </div>
       </div>
       <div class="tier-group fcsb-container">
@@ -76,9 +78,10 @@
           </div>
           <div class="calc-yield-info">
             <label class="label font-small weight-bold">APY (%)</label>
-            <label class="value font-small weight-semi spacing-large">{{
-              (Math.round( ((Math.round(this.estimatedapy * 100) * boostAPY) / 100 ) * 100) / 100)
-            }}</label>
+            <label class="value font-small weight-semi spacing-large">
+              <!-- {{ Math.round(((Math.round(this.estimatedapy * 100) * boostAPY) / 100) * 100) / 100 }} -->
+              30%
+            </label>
           </div>
           <div class="calc-yield-info">
             <label class="label font-small weight-bold">Estimated reward (NNI) </label>
@@ -118,8 +121,8 @@
               class="btn-transparent font-medium weight-semi icon-cursor"
               id="vstake"
               :disabled="(crpbalance < toStake || toStake * 1 <= 0) && !isOwner"
-              @click="isOwner?fund():stakeToken()"
-              >{{isOwner?"Fund":"Confirm"}}</Button
+              @click="isOwner ? fund() : stakeToken()"
+              >{{ isOwner ? 'Fund' : 'Confirm' }}</Button
             >
           </div>
         </div>
@@ -207,23 +210,22 @@ export default Vue.extend({
     'wallet.connected': {
       handler(connected: any) {
         setAnchorProvider(this.$web3, this.$wallet)
-        if(connected){
+        if (connected) {
           getFarmState().then((result) => {
-            if(result){
+            if (result) {
               this.isOwner = result.authority.toBase58() == this.$wallet?.publicKey?.toBase58()
             }
           })
         }
-        
       },
       deep: true
-    },
+    }
   },
   mounted() {
     setAnchorProvider(this.$web3, this.$wallet)
-    
+
     this.displayTiers(this.tierActive)
-    this.crpPrice = this.price.prices['NNI'];
+    this.crpPrice = this.price.prices['NNI']
     getExtraRewardConfigs().then((res: any) => {
       res.configs.forEach((item: any, index: number) => {
         if (index >= this.lockData.length) {
@@ -259,7 +261,7 @@ export default Vue.extend({
       this.toStake = this.crpbalance * multiple
     },
     async fund() {
-      console.log("here")
+      console.log('here')
       const pools = await getAllPools()
 
       console.log('Lock duration', this.minutesLock)
@@ -277,18 +279,18 @@ export default Vue.extend({
         description: '',
         duration: 0
       })
-      console.log("rewardMint", rewardMint)
-      console.log("userVault", get(this.wallet.tokenAccounts, `${rewardMint}.tokenAccountAddress`))
+      console.log('rewardMint', rewardMint)
+      console.log('userVault', get(this.wallet.tokenAccounts, `${rewardMint}.tokenAccountAddress`))
       fundToProgram(
         this.$web3,
         this.$wallet,
 
         poolSigner,
         get(this.wallet.tokenAccounts, `${rewardMint}.tokenAccountAddress`),
-        this.toStake * Math.pow(10, TOKENS['NNI'].decimals),
+        this.toStake * Math.pow(10, TOKENS['NNI'].decimals)
       )
         .then((txid) => {
-          console.log("txid", txid)
+          console.log('txid', txid)
           this.$notify.info({
             key,
             message: 'Transaction has been sent',
@@ -323,7 +325,7 @@ export default Vue.extend({
     },
 
     async stakeToken() {
-      console.log("here")
+      console.log('here')
       const pools = await getAllPools()
 
       console.log('Lock duration', this.minutesLock)

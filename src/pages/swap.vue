@@ -656,7 +656,7 @@ export default Vue.extend({
     get,
     async getCirculatingSupply() {
       const supply = await fetch(
-        'https://neonomad-api.azurewebsites.net/'
+        'https://cors-anywhere.herokuapp.com/https://neonomad-api.azurewebsites.net/'
       ).then((res) => res.json())
       this.circulatingSupply = supply
     },

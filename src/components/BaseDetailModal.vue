@@ -12,7 +12,10 @@
     <div class="base-container">
       <div class="base-title">
         <label class="label">Base APY</label>
-        <label class="value">{{ Math.round(estimatedapy * 100) / 100 }}%</label>
+        <label class="value">
+          <!-- {{ Math.round(estimatedapy * 100) / 100 }}% -->
+          30%
+        </label>
       </div>
 
       <div class="base-table">
