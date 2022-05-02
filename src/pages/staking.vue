@@ -204,7 +204,7 @@
                         >
                       </div>
                       <div class="btn-container">
-                        <Button
+                        <!-- <Button
                           class="btn-transparent weight-semi spacing-large"
                           id="stake"
                           @click="
@@ -213,7 +213,8 @@
                             }
                           "
                           >Stake</Button
-                        >
+                        > -->
+                        <Button :disabled="true" class="btn-transparent weight-semi spacing-large">Coming Soon</Button>
                       </div>
                     </div>
                   </div>
