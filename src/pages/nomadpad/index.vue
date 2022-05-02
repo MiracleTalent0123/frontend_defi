@@ -652,7 +652,7 @@
               <div class="fertilizer-funded-table isTablet">
                 <Collapse v-model="showCollapse" accordion>
                   <CollapsePanel
-                    v-for="(fertilizer, idx) in fertilizerItems"
+                    v-for="(fertilizer) in fertilizerItems"
                     :key="fertilizer.key"
                     v-show="true"
                     :show-arrow="true"
@@ -686,7 +686,7 @@
                       <Button class="detail-btn font-small weight-semi">
                         <img
                           class="arrow-icon"
-                          :class="idx != showCollapse ? 'arrow-up' : 'arrow-down'"
+                          :class="fertilizer.key != showCollapse ? 'arrow-up' : 'arrow-down'"
                           src="@/assets/icons/arrow-down-white.svg"
                         />
                       </Button>
@@ -765,7 +765,7 @@
               <div class="fertilizer-funded-table isMobile">
                 <Collapse v-model="showCollapse" accordion>
                   <CollapsePanel
-                    v-for="(fertilizer, idx) in fertilizerItems"
+                    v-for="(fertilizer) in fertilizerItems"
                     :key="fertilizer.key"
                     v-show="true"
                     :show-arrow="true"
@@ -784,7 +784,7 @@
                       <Button class="detail-btn font-small weight-semi">
                         <img
                           class="arrow-icon"
-                          :class="idx != showCollapse ? 'arrow-up' : 'arrow-down'"
+                          :class="fertilizer.key != showCollapse ? 'arrow-up' : 'arrow-down'"
                           src="@/assets/icons/arrow-down-white.svg"
                         />
                       </Button>
@@ -993,7 +993,7 @@ export default Vue.extend({
     }
   },
   head: {
-    title: 'Fertilizer'
+    title: 'NeoNomad Finance - Nomadpad'
   },
   computed: {
     ...mapState(['app', 'wallet', 'farm', 'url', 'price', 'liquidity'])

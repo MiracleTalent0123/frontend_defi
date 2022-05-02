@@ -359,7 +359,7 @@
             </div>
 
             <div v-if="farm.initialized && farmLoaded">
-              <div class="farm-table isDesktop">
+              <div class="farm-table isDesktop" v-if="showFarms.length > 0">
                 <Row class="farm-item" v-for="(farm, idx) in showFarms" :key="farm.farmInfo.poolId" :gutter="16">
                   <Col class="fcs-container" span="6">
                     <div class="state">
@@ -728,7 +728,7 @@
                 </Row>
               </div>
 
-              <div class="farm-table isTablet">
+              <div class="farm-table isTablet" v-if="showFarms.length > 0">
                 <Collapse v-model="showCollapse" class="farm-collapse-tablet" accordion>
                   <CollapsePanel v-for="(farm, idx) in showFarms" v-show="true" :key="farm.farmInfo.poolId">
                     <Row slot="header" class="farm-collapse-tablet-head">
@@ -1074,6 +1074,7 @@
                   </CollapsePanel>
                 </Collapse>
               </div>
+              <div class="font-large weight-semi coming-soon-text" v-if="showFarms.length == 0">Coming Soon</div>
 
               <div class="farm-table isMobile">
                 <Collapse v-model="showCollapse" class="farm-collapse-mobile" accordion>
@@ -3872,5 +3873,11 @@ export default Vue.extend({
       }
     }
   }
+}
+
+.coming-soon-text {
+  padding: 20px 0;
+  text-align: center;
+  width: 100%
 }
 </style>
