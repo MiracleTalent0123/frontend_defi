@@ -188,7 +188,7 @@
                   >
                 </div>
 
-                <div v-else>
+                <!-- <div v-else>
                   <div v-if="userStaked > 0" class="staking-action-item fcsb-container">
                     <div class="reward-pending">
                       <label class="label font-medium">NNI Staked</label>
@@ -204,7 +204,7 @@
                         >
                       </div>
                       <div class="btn-container">
-                        <!-- <Button
+                        <Button
                           class="btn-transparent weight-semi spacing-large"
                           id="stake"
                           @click="
@@ -213,7 +213,7 @@
                             }
                           "
                           >Stake</Button
-                        > -->
+                        >
                         <Button :disabled="true" class="btn-transparent weight-semi spacing-large">Coming Soon</Button>
                       </div>
                     </div>
@@ -231,6 +231,11 @@
                       >Stake</Button
                     >
                   </div>
+                </div> -->
+                <div v-else class="btn-container btn-large fcc-container">
+                  <Button class="btn-transparent font-large weight-bold" id="stake" :disabled="true"
+                    >Coming Soon</Button
+                  >
                 </div>
               </div>
 
