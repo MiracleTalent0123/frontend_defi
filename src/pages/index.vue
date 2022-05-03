@@ -13,7 +13,7 @@
         </div>
       </div>
     </section>
-    <section class="landing-body">
+    <!-- <section class="landing-body">
       <video class="landing-video" autoplay muted loop preload="auto">
         <source :src="videoLinks.landing" type="video/mp4" />
       </video>
@@ -341,7 +341,7 @@
           </Row>
         </div>
       </div>
-    </section>
+    </section> -->
   </main>
 </template>
 
@@ -540,149 +540,125 @@ export default class Landing extends Vue {
   currentPlay: number = 1
   currentVideo: string = this.videoLinks.swap
 
-  mounted() {
-    this.getTvl()
-    this.getTwitterFeeds()
-  }
+  // mounted() {
+  //   this.getTvl()
+  //   this.getTwitterFeeds()
+  // }
 
-  beforeDestroy() {
-    window.clearInterval(this.timer)
-  }
+  // beforeDestroy() {
+  //   window.clearInterval(this.timer)
+  // }
 
-  changeToFarmer() {
-    this.isFarmer = !this.isFarmer
-  }
+  // changeToFarmer() {
+  //   this.isFarmer = !this.isFarmer
+  // }
 
-  changeToIndustry(num: number) {
-    switch (num) {
-      case 1:
-        this.isBacked = true
-        this.isAdvisors = false
-        this.isPartners = false
-        this.isPowered = false
-        break
-      case 2:
-        this.isBacked = false
-        this.isAdvisors = true
-        this.isPartners = false
-        this.isPowered = false
-        break
-      case 3:
-        this.isBacked = false
-        this.isAdvisors = false
-        this.isPartners = true
-        this.isPowered = false
-        break
-      case 4:
-        this.isBacked = false
-        this.isAdvisors = false
-        this.isPartners = false
-        this.isPowered = true
-        break
-    }
-  }
+  // changeToIndustry(num: number) {
+  //   switch (num) {
+  //     case 1:
+  //       this.isBacked = true
+  //       this.isAdvisors = false
+  //       this.isPartners = false
+  //       this.isPowered = false
+  //       break
+  //     case 2:
+  //       this.isBacked = false
+  //       this.isAdvisors = true
+  //       this.isPartners = false
+  //       this.isPowered = false
+  //       break
+  //     case 3:
+  //       this.isBacked = false
+  //       this.isAdvisors = false
+  //       this.isPartners = true
+  //       this.isPowered = false
+  //       break
+  //     case 4:
+  //       this.isBacked = false
+  //       this.isAdvisors = false
+  //       this.isPartners = false
+  //       this.isPowered = true
+  //       break
+  //   }
+  // }
 
-  changeToDirect() {
-    this.isDirect = !this.isDirect
-  }
+  // changeToDirect() {
+  //   this.isDirect = !this.isDirect
+  // }
 
-  selectCategory(category: string) {
-    this.currentCategory = category
-    if (category === 'advisors') this.currentIndustry = this.surroundedList.advisors
-    else if (category === 'backedBy') this.currentIndustry = this.surroundedList.backedBy
-    else if (category === 'partners') this.currentIndustry = this.surroundedList.partners
-    else if (category === 'poweredBy') this.currentIndustry = this.surroundedList.poweredBy
-  }
+  // selectCategory(category: string) {
+  //   this.currentCategory = category
+  //   if (category === 'advisors') this.currentIndustry = this.surroundedList.advisors
+  //   else if (category === 'backedBy') this.currentIndustry = this.surroundedList.backedBy
+  //   else if (category === 'partners') this.currentIndustry = this.surroundedList.partners
+  //   else if (category === 'poweredBy') this.currentIndustry = this.surroundedList.poweredBy
+  // }
 
-  selectVideo(id: number) {
-    this.currentPlay = id
-    if (id === 1) this.currentVideo = this.videoLinks.swap
-    else if (id === 2) this.currentVideo = this.videoLinks.stake
-    else if (id === 3) this.currentVideo = this.videoLinks.harvest
-    else if (id === 4) this.currentVideo = this.videoLinks.unstake
-    else if (id === 5) this.currentVideo = this.videoLinks.pool
-    else if (id === 6) this.currentVideo = this.videoLinks.farm
-  }
+  // selectVideo(id: number) {
+  //   this.currentPlay = id
+  //   if (id === 1) this.currentVideo = this.videoLinks.swap
+  //   else if (id === 2) this.currentVideo = this.videoLinks.stake
+  //   else if (id === 3) this.currentVideo = this.videoLinks.harvest
+  //   else if (id === 4) this.currentVideo = this.videoLinks.unstake
+  //   else if (id === 5) this.currentVideo = this.videoLinks.pool
+  //   else if (id === 6) this.currentVideo = this.videoLinks.farm
+  // }
 
-  async getMarketCap(price: any) {
-    let responseData: any = []
-    try {
-      responseData = await fetch('https://api.cropper.finance/supply/').then((res) => res.json())
-    } catch (err) {
-      console.log(err)
-    } finally {
-      this.marketCap = Math.round(responseData * price)
-      this.marketCap = this.marketCap.toLocaleString('en-US')
-    }
-  }
+  // async getMarketCap(price: any) {
+  //   let responseData: any = []
+  //   try {
+  //     responseData = await fetch('https://api.cropper.finance/supply/').then((res) => res.json())
+  //   } catch (err) {
+  //     console.log(err)
+  //   } finally {
+  //     this.marketCap = Math.round(responseData * price)
+  //     this.marketCap = this.marketCap.toLocaleString('en-US')
+  //   }
+  // }
 
-  async getTvl() {
-    let cur_date = new Date().getTime()
-    if (window.localStorage.TVL_last_updated) {
-      const last_updated = parseInt(window.localStorage.TVL_last_updated)
-      if (cur_date - last_updated <= 600000) {
-        this.TVL = window.localStorage.TVL
-        this.TVL = this.TVL.toLocaleString('en-US')
-        return
-      }
-    }
+  // async getTvl() {
+  //   let cur_date = new Date().getTime()
+  //   if (window.localStorage.TVL_last_updated) {
+  //     const last_updated = parseInt(window.localStorage.TVL_last_updated)
+  //     if (cur_date - last_updated <= 600000) {
+  //       this.TVL = window.localStorage.TVL
+  //       this.TVL = this.TVL.toLocaleString('en-US')
+  //       return
+  //     }
+  //   }
 
-    let responseData: any = []
-    let tvl = 0
-    // try {
-    //   responseData = await fetch('https://api.cropper.finance/cmc/').then((res) => res.json())
+  //   let responseData: any = []
+  //   let tvl = 0
+  //   this.TVL = Math.round(tvl)
 
-    //   Object.keys(responseData).forEach(function (key) {
-    //     if ((responseData as any)[key as any].tvl * 1 < 2000000) {
-    //       tvl = tvl * 1 + (responseData as any)[key as any].tvl * 1
-    //     }
-    //   })
-    // } catch {
-    //   // dummy data
-    // } finally {
-    // }
+  //   window.localStorage.TVL_last_updated = new Date().getTime()
+  //   window.localStorage.TVL = this.TVL
 
-    // try {
-    //   responseData = await fetch('https://api.cropper.finance/staking/').then((res) => res.json())
-    //   tvl = tvl * 1 + (responseData as any).value * 1
-    //   this.CRPPrice = (responseData as any).price * 1
-    //   this.getMarketCap(this.CRPPrice)
-    //   this.CRPPrice = this.CRPPrice.toLocaleString('en-US')
-    // } catch {
-    //   // dummy data
-    // } finally {
-    // }
+  //   this.TVL = this.TVL.toLocaleString('en-US')
+  // }
 
-    this.TVL = Math.round(tvl)
+  // async getTwitterFeeds() {
+  //   let responseData: any = []
+  //   try {
+  //     responseData = await fetch('https://api.cropper.finance/tweets/').then((res) => res.json())
+  //   } catch (err) {
+  //     console.log(err)
+  //   } finally {
+  //     this.twitterFeeds = responseData
+  //     this.twitterShows = this.twitterFeeds.slice(0, 3)
+  //   }
+  // }
 
-    window.localStorage.TVL_last_updated = new Date().getTime()
-    window.localStorage.TVL = this.TVL
-
-    this.TVL = this.TVL.toLocaleString('en-US')
-  }
-
-  async getTwitterFeeds() {
-    let responseData: any = []
-    try {
-      responseData = await fetch('https://api.cropper.finance/tweets/').then((res) => res.json())
-    } catch (err) {
-      console.log(err)
-    } finally {
-      this.twitterFeeds = responseData
-      this.twitterShows = this.twitterFeeds.slice(0, 3)
-    }
-  }
-
-  switchTab(activeKey: any) {
-    console.log(activeKey)
-    if (activeKey === '1') {
-      this.currentPlay = 1
-      this.currentVideo = this.videoLinks.swap
-    } else if (activeKey === '2') {
-      this.currentPlay = 5
-      this.currentVideo = this.videoLinks.pool
-    }
-  }
+  // switchTab(activeKey: any) {
+  //   console.log(activeKey)
+  //   if (activeKey === '1') {
+  //     this.currentPlay = 1
+  //     this.currentVideo = this.videoLinks.swap
+  //   } else if (activeKey === '2') {
+  //     this.currentPlay = 5
+  //     this.currentVideo = this.videoLinks.pool
+  //   }
+  // }
 }
 </script>
 

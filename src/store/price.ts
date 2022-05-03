@@ -46,34 +46,21 @@ export const mutations = mutationTree(state, {
   }
 })
 
-
 export const actions = actionTree(
   { state, getters, mutations },
   {
     async requestPrices({ commit }) {
       commit('setLoading', true)
 
-      const baseprices = await this.$api.getPrices();
+      const baseprices = await this.$api.getPrices()
       const prices: PricesData = {}
 
-      Object.entries(baseprices).forEach(
-        ([key, value]) => {
-          prices[value['symbol']] = value['price']
-        }
-      );
+      Object.entries(baseprices).forEach(([key, value]) => {
+        prices[value['symbol']] = value['price']
+      })
 
+      console.log('prices: ', prices)
 
-
-      const stake = await fetch('https://api.cropper.finance/staking/').then((res) => res.json());
-
-      prices['CRP'] = stake['price']
-
-      //for hongbo's test
-      if(DEVNET_MODE){
-        prices["CRP"]=0.32
-        prices["B2B"]=2.24
-      }
-      
       commit('setPrices', prices)
 
       commit('setInitialized')

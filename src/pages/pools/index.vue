@@ -820,7 +820,7 @@ Vue.use(Vco)
     Spin,
     Pagination
   },
-  async asyncData({ $api }) {
+  async asyncData() {
     window.poolsDatas = {} as any
     window.poolsDatas = []
     window.labelised = []

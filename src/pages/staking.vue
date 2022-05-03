@@ -148,7 +148,10 @@
                       <img class="tooltip-icon" src="@/assets/icons/info.svg" />
                     </Tooltip>
                   </div>
-                  <div class="value font-medium weight-bold">{{ totalStaked }}</div>
+                  <div class="value font-medium weight-bold">
+                    <!-- {{ totalStaked }} -->
+                    Pending
+                  </div>
                 </div>
 
                 <div class="staking-info fcsb-container">
@@ -162,7 +165,10 @@
                     </Tooltip>
                   </div>
 
-                  <div class="value font-medium weight-bold">{{ totalStakedPrice }}</div>
+                  <div class="value font-medium weight-bold">
+                    <!-- {{ totalStakedPrice }} -->
+                    Pending
+                  </div>
                 </div>
               </div>
 
@@ -559,27 +565,6 @@ export default Vue.extend({
 
       let responseData: any = []
       let tvl = 0
-      // try {
-      //   responseData = await fetch('https://api.cropper.finance/cmc/').then((res) => res.json())
-
-      //   Object.keys(responseData).forEach(function (key) {
-      //     if ((responseData as any)[key as any].tvl * 1 < 2000000) {
-      //       tvl = tvl * 1 + (responseData as any)[key as any].tvl * 1
-      //     }
-      //   })
-      // } catch {
-      //   // dummy data
-      // } finally {
-      // }
-
-      // try {
-      //   responseData = await fetch('https://api.cropper.finance/staking/').then((res) => res.json())
-      //   tvl = tvl * 1 + (responseData as any).value * 1
-      // } catch {
-      //   // dummy data
-      // } finally {
-      // }
-
       this.TVL = Math.round(tvl)
 
       window.localStorage.TVL_last_updated = new Date().getTime()
