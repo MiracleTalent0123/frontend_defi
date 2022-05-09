@@ -1,13 +1,15 @@
 <template>
   <div class="pool container">
-    <CoinModalMulti
+    <!-- <CoinModalMulti
       v-if="stakeModalOpening"
       title="Add Liquidity"
       :loading="staking"
       :farmInfo="poolInf"
       @onOk="stake"
       @onCancel="cancelPoolAdd"
-    />
+    /> -->
+
+    <AddLiquidityModal v-if="stakeModalOpening" @onCancel="cancelPoolAdd" title="Add Liquidity" />
 
     <CoinModal
       v-if="unstakeModalOpening"
